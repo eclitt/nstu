@@ -28,10 +28,6 @@ public:
     String(const String& other);        // Конструктор копирования
     virtual ~String();                  // Виртуальный деструктор
 
-
-    Testrazborka(int a, int y);
-
-
     // Методы работы со строками
     virtual void setString(const char* s);      // Виртуальное изменение строки
     virtual void print() const;         // Виртуальный метод вывода
@@ -68,16 +64,6 @@ public:
     // Статические методы
     static int getCount();              // Получение количества объектов
     static String* createFromType(StringType type); // Создание объекта по типу
-
-};  
-
-class newclass : public String, public OctalString{
-public:
-    newclass(char a) : String(a) {
-        bd drop hz??
-    }
-    
-}
-
+};
 
 #endif

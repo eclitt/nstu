@@ -9,6 +9,7 @@
 #include <random>
 #include <stdexcept>
 #include <chrono>
+#include <iomanip>
 
 // ===================== Шаблонный класс Node =====================
 template <typename T>
@@ -248,10 +249,30 @@ public:
             return;
         }
         
+        // Просто выводим данные без заголовков
         Node<T>* current = head;
         int counter = 1;
+        
         while (current) {
-            std::cout << "[" << counter << "] " << current->data << "\n";
+            const Student& student = current->data;
+            
+            // Выводим строку в формате: Фамилия | дата | дата | дата | адрес | группа
+            std::cout << counter << ". "
+                      << student.getLastName() << " | "
+                      << student.getBirthDate() << " | "
+                      << student.getAdmissionDate() << " | "
+                      << student.getExpulsionDate() << " | "
+                      << student.getAddress() << " | "
+                      << student.getGroup();
+            
+            // Добавляем статус в скобках
+            if (student.isCurrentlyStudying()) {
+                std::cout << " (обучается)";
+            } else {
+                std::cout << " (отчислен)";
+            }
+            
+            std::cout << "\n";
             current = current->next;
             counter++;
         }
@@ -429,6 +450,7 @@ public:
     void printAllStudents() const {
         std::cout << "=== Список студентов (" << students.getSize() << " шт.) ===\n";
         students.print();
+        std::cout << "===============================\n";
     }
     
     void generateTestData(int count) {

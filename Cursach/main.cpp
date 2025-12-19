@@ -135,7 +135,21 @@ private:
         int index = getIntInput("Номер студента для редактирования: ", 
                                1, manager.getStudentCount());
         
-        std::cout << "Текущие данные:\n" << manager.getStudent(index - 1) << "\n";
+        std::cout << "Текущие данные:\n";
+        std::cout << manager.getStudent(index - 1).getLastName() << " | "
+                  << manager.getStudent(index - 1).getBirthDate() << " | "
+                  << manager.getStudent(index - 1).getAdmissionDate() << " | "
+                  << manager.getStudent(index - 1).getExpulsionDate() << " | "
+                  << manager.getStudent(index - 1).getAddress() << " | "
+                  << manager.getStudent(index - 1).getGroup();
+        
+        if (manager.getStudent(index - 1).isCurrentlyStudying()) {
+            std::cout << " (обучается)";
+        } else {
+            std::cout << " (отчислен)";
+        }
+        std::cout << "\n\n";
+        
         Student newStudent = inputStudent();
         manager.updateStudent(index - 1, newStudent);
         std::cout << "Данные обновлены!\n";
@@ -175,7 +189,20 @@ private:
         
         std::cout << "Найдено " << results.size() << " студентов:\n";
         for (const auto& student : results) {
-            std::cout << student << "\n";
+            std::cout << "• " 
+                      << student.getLastName() << " | "
+                      << student.getBirthDate() << " | "
+                      << student.getAdmissionDate() << " | "
+                      << student.getExpulsionDate() << " | "
+                      << student.getAddress() << " | "
+                      << student.getGroup();
+            
+            if (student.isCurrentlyStudying()) {
+                std::cout << " (обучается)";
+            } else {
+                std::cout << " (отчислен)";
+            }
+            std::cout << "\n";
         }
     }
     
@@ -342,4 +369,4 @@ int main() {
     }
     
     return 0;
-}
+} // setf | убрать даты отчисление если учаться| шаблоны по фамилии поиск для удаления / (отчислен убрать) / то есть оставить дату отчисления если отчислен / поиск по шаблону и фамилия И группа / редактирование (поиск оп различным полям) / вставка с сохранением порядка (выбор идеального места) \ вывод определенной записи / 1 поиск по групе ()получаем список) далее поиск среди нового списка по шаблону / не нужна посторанная инфа (только выбраный студент)

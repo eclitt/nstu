@@ -1,0 +1,326 @@
+#include "OctalString.h"
+#include "Exceptions.h"
+#include <cstring>
+#include <iostream>
+#include <string>
+#include <climits>
+#include <limits>
+
+// Проверка, является ли строка восьмеричным числом
+bool OctalString::isValidOctal(const char* s) const {
+    if (!s || strlen(s) == 0) return false;
+    
+    // Восьмеричное число может содержать только цифры 0-7
+    for (int i = 0; s[i] != '\0'; i++) {
+        if (s[i] < '0' || s[i] > '7') {
+            return false;
+        }
+    }
+    return true;
+}
+
+// Перевод из восьмеричной в десятичную систему
+long long OctalString::octalToDecimal(const char* octal) const {
+    if (!octal || !isValidOctal(octal)) return 0;
+    
+    long long decimal = 0;
+    int len = strlen(octal);
+    
+    for (int i = 0; i < len; i++) {
+        decimal = decimal * 8 + (octal[i] - '0');
+    }
+    
+    return decimal;
+}
+
+// Перевод из десятичной в восьмеричную систему
+std::string OctalString::decimalToOctal(long long decimal) const {
+    if (decimal == 0) return "0";
+    
+    std::string octal;
+    long long temp = decimal < 0 ? -decimal : decimal;
+    
+    while (temp > 0) {
+        octal = char('0' + (temp % 8)) + octal;
+        temp /= 8;
+    }
+    
+    if (decimal < 0) {
+        octal = "-" + octal;
+    }
+    
+    return octal;
+}
+
+// Конструктор по умолчанию
+OctalString::OctalString() : String(), number(0) {
+}
+
+// Конструктор с параметром (строка)
+OctalString::OctalString(const char* s) : String() {
+    setString(s);
+}
+
+// Конструктор с параметром (число)
+OctalString::OctalString(long long num) : String() {
+    setNumber(num);
+}
+
+// Конструктор копирования
+OctalString::OctalString(const OctalString& other) : String(other) {
+    number = other.number;
+}
+
+// Конструктор преобразования
+OctalString::OctalString(const String& other) : String(other) {
+    if (isValidOctal(other.getString())) {
+        number = octalToDecimal(other.getString());
+    } else {
+        number = 0;
+    }
+}
+
+// Деструктор
+OctalString::~OctalString() {
+}
+
+// Вывод строки с числовым значением
+void OctalString::print() const {
+    if (str) {
+        std::cout << "OctalString: \"" << str << "\" (длина: " << length 
+                  << ", десятичное значение: " << number << ")" << std::endl;
+    } else {
+        std::cout << "OctalString пуста." << std::endl;
+    }
+}
+
+// Изменение строки с проверкой (переопределенная версия)
+void OctalString::setString(const char* s) {
+    if (!s) {
+        String::setString(s);
+        number = 0;
+        return;
+    }
+    
+    if (isValidOctal(s)) {
+        String::setString(s);
+        try {
+            number = octalToDecimal(s);
+            // Проверка на переполнение
+            if (number < std::numeric_limits<long long>::min() || 
+                number > std::numeric_limits<long long>::max()) {
+                throw OutOfRangeException("Переполнение при преобразовании восьмеричного числа: " + std::string(s));
+            }
+        } catch (const OutOfRangeException&) {
+            throw;
+        } catch (const std::exception& e) {
+            throw InvalidArgumentException("Ошибка при преобразовании восьмеричного числа: " + std::string(e.what()));
+        }
+    } else {
+        throw InvalidArgumentException("Строка '" + std::string(s) + "' не является восьмеричным числом");
+    }
+}
+
+// Установка числового значения
+void OctalString::setNumber(long long num) {
+    number = num;
+    std::string octalStr = decimalToOctal(num);
+    String::setString(octalStr.c_str());
+}
+
+// Запись в текстовый файл
+void OctalString::writeToTextFile(std::ofstream& ofs) const {
+    if (!ofs.is_open() || ofs.fail()) {
+        throw FileException("Ошибка записи OctalString в файл: файл не открыт");
+    }
+    
+    // Сначала записываем тип объекта
+    ofs << static_cast<int>(getType()) << " ";
+    if (ofs.fail() || ofs.bad()) {
+        throw FileException("Ошибка записи типа OctalString в файл");
+    }
+    
+    // Затем длину строки и саму строку
+    ofs << length << " ";
+    if (ofs.fail() || ofs.bad()) {
+        throw FileException("Ошибка записи длины OctalString в файл");
+    }
+    
+    if (length > 0) {
+        ofs.write(str, length);
+        if (ofs.fail() || ofs.bad()) {
+            throw FileException("Ошибка записи данных OctalString в файл");
+        }
+    }
+    
+    // И числовое значение
+    ofs << " " << number;
+    if (ofs.fail() || ofs.bad()) {
+        throw FileException("Ошибка записи числового значения OctalString в файл");
+    }
+}
+
+// Чтение из текстового файла
+void OctalString::readFromTextFile(std::ifstream& ifs) {
+    if (!ifs.is_open() || ifs.fail()) {
+        throw FileException("Ошибка чтения OctalString из файла: файл не открыт или поврежден");
+    }
+    
+    // Пропускаем тип (он уже считан фабричным методом)
+    // Сначала читаем базовую часть (длину и строку)
+    int len;
+    ifs >> len;
+    
+    if (ifs.fail() || ifs.bad()) {
+        throw FileException("Ошибка чтения длины OctalString из файла");
+    }
+    
+    if (len < 0 || len > 1000000) {
+        throw OutOfRangeException("Некорректная длина OctalString в файле: " + std::to_string(len));
+    }
+    
+    ifs.get(); // Пропускаем пробел
+    
+    if (len > 0) {
+        char* buffer = nullptr;
+        try {
+            buffer = new (std::nothrow) char[len + 1];
+            if (!buffer) {
+                throw MemoryException("Не удалось выделить память для чтения OctalString из файла");
+            }
+            ifs.read(buffer, len);
+            if (ifs.fail() || ifs.bad()) {
+                delete[] buffer;
+                throw FileException("Ошибка чтения данных OctalString из файла");
+            }
+            buffer[len] = '\0';
+            
+            // Используем setString для проверки корректности
+            try {
+                this->setString(buffer);
+            } catch (const std::exception& e) {
+                delete[] buffer;
+                throw; // Перебрасываем исключение дальше
+            }
+            delete[] buffer;
+        } catch (const std::bad_alloc&) {
+            delete[] buffer;
+            throw MemoryException("Недостаточно памяти для чтения OctalString из файла");
+        }
+    } else {
+        this->setString("");
+        number = 0;
+    }
+    
+    // Считываем числовое значение (если есть пробел перед ним)
+    ifs >> number;
+    if (ifs.fail() || ifs.bad()) {
+        throw FileException("Ошибка чтения числового значения OctalString из файла");
+    }
+}
+
+// Запись в бинарный файл
+void OctalString::writeBinary(std::ofstream& ofs) const {
+    // Сначала вызываем метод базового класса
+    String::writeBinary(ofs);
+    
+    // Затем записываем числовое значение
+    ofs.write(reinterpret_cast<const char*>(&number), sizeof(number));
+    if (ofs.fail() || ofs.bad()) {
+        throw FileException("Ошибка записи числового значения OctalString в бинарный файл");
+    }
+}
+
+// Чтение из бинарного файла
+void OctalString::readBinary(std::ifstream& ifs) {
+    // Сначала считываем базовую часть
+    String::readBinary(ifs);
+    
+    // Затем считываем числовое значение
+    ifs.read(reinterpret_cast<char*>(&number), sizeof(number));
+    if (ifs.fail() || ifs.bad()) {
+        throw FileException("Ошибка чтения числового значения OctalString из бинарного файла");
+    }
+}
+
+// Оператор сложения
+OctalString OctalString::operator+(const OctalString& other) const {
+    // Проверка на переполнение
+    if ((other.number > 0 && number > std::numeric_limits<long long>::max() - other.number) ||
+        (other.number < 0 && number < std::numeric_limits<long long>::min() - other.number)) {
+        throw OutOfRangeException("Переполнение при сложении восьмеричных чисел");
+    }
+    
+    long long sum = number + other.number;
+    return OctalString(sum);
+}
+
+// Оператор присваивания (OctalString)
+OctalString& OctalString::operator=(const OctalString& other) {
+    if (this != &other) {
+        String::operator=(other);
+        number = other.number;
+    }
+    return *this;
+}
+
+// Оператор присваивания (String)
+OctalString& OctalString::operator=(const String& other) {
+    String::operator=(other);
+    if (isValidOctal(other.getString())) {
+        number = octalToDecimal(other.getString());
+    } else {
+        number = 0;
+    }
+    return *this;
+}
+
+// Сложение с числом
+OctalString OctalString::operator+(long long num) const {
+    // Проверка на переполнение
+    if ((num > 0 && number > std::numeric_limits<long long>::max() - num) ||
+        (num < 0 && number < std::numeric_limits<long long>::min() - num)) {
+        throw OutOfRangeException("Переполнение при сложении восьмеричного числа с числом");
+    }
+    
+    long long sum = number + num;
+    return OctalString(sum);
+}
+
+// Вычитание числа
+OctalString OctalString::operator-(long long num) const {
+    // Проверка на переполнение
+    if ((num < 0 && number > std::numeric_limits<long long>::max() + num) ||
+        (num > 0 && number < std::numeric_limits<long long>::min() + num)) {
+        throw OutOfRangeException("Переполнение при вычитании из восьмеричного числа");
+    }
+    
+    long long diff = number - num;
+    return OctalString(diff);
+}
+
+// Деление на число
+OctalString OctalString::operator/(long long num) const {
+    if (num == 0) {
+        throw DivisionByZeroException("Попытка деления восьмеричного числа на ноль");
+    }
+    
+    // Проверка на переполнение при делении
+    long long result = number / num;
+    return OctalString(result);
+}
+
+// Остаток от деления
+OctalString OctalString::operator%(long long num) const {
+    if (num == 0) {
+        throw DivisionByZeroException("Попытка вычисления остатка от деления восьмеричного числа на ноль");
+    }
+    
+    long long result = number % num;
+    return OctalString(result);
+}
+
+// Сравнение
+bool OctalString::operator==(const OctalString& other) const {
+    return number == other.number;
+}

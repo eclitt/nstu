@@ -260,25 +260,24 @@ public:
             std::cout << counter << ". "
                       << student.getLastName() << " | "
                       << student.getBirthDate() << " | "
-                      << student.getAdmissionDate() << " | "
-                      << student.getExpulsionDate() << " | "
-                      << student.getAddress() << " | "
-                      << student.getGroup();
+                      << student.getAdmissionDate() << " | ";
             
-            // Добавляем статус в скобках
-            if (student.isCurrentlyStudying()) {
-                std::cout << " (обучается)";
+            // Выводим дату отчисления только если студент отчислен
+            if (!student.isCurrentlyStudying()) {
+                std::cout << student.getExpulsionDate() << " | ";
             } else {
-                std::cout << " (отчислен)";
+                std::cout << "          | "; // Пустое место вместо даты
             }
             
-            std::cout << "\n";
+            std::cout << student.getAddress() << " | "
+                      << student.getGroup() << "\n";
+            
             current = current->next;
             counter++;
         }
     }
     
-    void addSorted(const T& item, bool ascending = true) {
+    void addSorted(const T& item, std::function<bool(const T&, const T&)> comparator) {
         if (isEmpty()) {
             add(item);
             return;
@@ -287,8 +286,7 @@ public:
         int index = 0;
         Node<T>* current = head;
         while (current) {
-            if ((ascending && item < current->data) || 
-                (!ascending && current->data < item)) {
+            if (comparator(item, current->data)) {
                 insert(index, item);
                 return;
             }
@@ -326,6 +324,38 @@ class StudentManager {
 private:
     LinkedList<Student> students;
     
+    // Вспомогательная функция для форматированного вывода одного студента
+    void printStudentFormatted(const Student& student, int index = -1) const {
+        // Определяем ширину колонок
+        const int col1 = 4;   // №
+        const int col2 = 15;  // Фамилия
+        const int col3 = 12;  // Дата рождения
+        const int col4 = 12;  // Дата поступления
+        const int col5 = 12;  // Дата отчисления
+        const int col6 = 20;  // Адрес
+        const int col7 = 10;  // Группа
+        
+        if (index >= 0) {
+            std::cout << std::left << std::setw(col1) << index + 1;
+        } else {
+            std::cout << std::string(col1, ' ');
+        }
+        
+        std::cout << std::left << std::setw(col2) << student.getLastName() 
+                  << std::setw(col3) << student.getBirthDate() 
+                  << std::setw(col4) << student.getAdmissionDate();
+        
+        // Выводим дату отчисления только если студент отчислен
+        if (!student.isCurrentlyStudying()) {
+            std::cout << std::setw(col5) << student.getExpulsionDate();
+        } else {
+            std::cout << std::setw(col5) << " "; // Пустое место
+        }
+        
+        std::cout << std::setw(col6) << student.getAddress() 
+                  << std::setw(col7) << student.getGroup() << "\n";
+    }
+    
 public:
     void addStudent(const Student& student) { students.add(student); }
     void insertStudent(int index, const Student& student) { students.insert(index, student); }
@@ -333,9 +363,20 @@ public:
     
     void removeStudentByLastName(const std::string& lastName) {
         for (int i = 0; i < students.getSize(); i++) {
-            if (students.get(i).getLastName() == lastName) {
+            if (students[i].getLastName() == lastName) {
                 students.remove(i);
                 return;
+            }
+        }
+    }
+    
+    // Удаление по шаблону фамилии и группе
+    void removeByLastNamePatternAndGroup(const std::string& pattern, const std::string& group) {
+        for (int i = students.getSize() - 1; i >= 0; i--) {
+            const Student& student = students[i];
+            if (student.getLastName().find(pattern) != std::string::npos && 
+                student.getGroup() == group) {
+                students.remove(i);
             }
         }
     }
@@ -345,6 +386,18 @@ public:
     int getStudentCount() const { return students.getSize(); }
     bool isEmpty() const { return students.isEmpty(); }
     void clearAll() { students.clear(); }
+    
+    // Вывод одного студента с ровными колонками
+    void printStudent(int index) const {
+        if (index < 0 || index >= students.getSize()) {
+            std::cout << "Неверный индекс студента.\n";
+            return;
+        }
+        
+        std::cout << "\n=== Данные студента ===\n";
+        printStudentFormatted(students.get(index));
+        std::cout << "=======================\n";
+    }
     
     std::vector<Student> searchByGroup(const std::string& group) const {
         return students.findByPredicate([&group](const Student& s) {
@@ -361,6 +414,14 @@ public:
     std::vector<Student> searchByLastNamePattern(const std::string& pattern) const {
         return students.findByPredicate([&pattern](const Student& s) {
             return s.getLastName().find(pattern) != std::string::npos;
+        });
+    }
+    
+    // Поиск по шаблону фамилии и группе
+    std::vector<Student> searchByPatternAndGroup(const std::string& pattern, const std::string& group) const {
+        return students.findByPredicate([&pattern, &group](const Student& s) {
+            return s.getLastName().find(pattern) != std::string::npos && 
+                   s.getGroup() == group;
         });
     }
     
@@ -394,8 +455,25 @@ public:
         });
     }
     
-    void addStudentSorted(const Student& student, bool ascending = true) {
-        students.addSorted(student, ascending);
+    // Добавление с сохранением порядка по фамилии
+    void addStudentSortedByLastName(const Student& student, bool ascending = true) {
+        students.addSorted(student, [ascending](const Student& a, const Student& b) {
+            return ascending ? a < b : b < a;
+        });
+    }
+    
+    // Добавление с сохранением порядка по дате рождения
+    void addStudentSortedByBirthDate(const Student& student, bool ascending = true) {
+        students.addSorted(student, [ascending](const Student& a, const Student& b) {
+            return ascending ? a.compareByBirthDate(b) : b.compareByBirthDate(a);
+        });
+    }
+    
+    // Добавление с сохранением порядка по группе
+    void addStudentSortedByGroup(const Student& student, bool ascending = true) {
+        students.addSorted(student, [ascending](const Student& a, const Student& b) {
+            return ascending ? a.compareByGroup(b) : b.compareByGroup(a);
+        });
     }
     
     void printStatistics() const {
@@ -428,17 +506,16 @@ public:
     void editByGroupAndPattern(const std::string& group, const std::string& pattern,
                                const Student& newData) {
         for (int i = 0; i < students.getSize(); i++) {
-            Student& student = students[i];
-            if (student.getGroup() == group && 
-                student.getLastName().find(pattern) != std::string::npos) {
-                student = newData;
+            if (students[i].getGroup() == group && 
+                students[i].getLastName().find(pattern) != std::string::npos) {
+                students.set(i, newData);
             }
         }
     }
     
     void removeByGroup(const std::string& group) {
         for (int i = students.getSize() - 1; i >= 0; i--) {
-            if (students.get(i).getGroup() == group) {
+            if (students[i].getGroup() == group) {
                 students.remove(i);
             }
         }
@@ -449,7 +526,37 @@ public:
     
     void printAllStudents() const {
         std::cout << "=== Список студентов (" << students.getSize() << " шт.) ===\n";
-        students.print();
+        
+        if (students.isEmpty()) {
+            std::cout << "Список пуст.\n";
+            return;
+        }
+        
+        // Выводим заголовок
+        const int col1 = 4;   // №
+        const int col2 = 15;  // Фамилия
+        const int col3 = 12;  // Дата рождения
+        const int col4 = 12;  // Дата поступления
+        const int col5 = 12;  // Дата отчисления
+        const int col6 = 20;  // Адрес
+        const int col7 = 10;  // Группа
+        
+        std::cout << std::left 
+                  << std::setw(col1) << "№" 
+                  << std::setw(col2) << "Фамилия"
+                  << std::setw(col3) << "Рождение"
+                  << std::setw(col4) << "Поступление"
+                  << std::setw(col5) << "Отчисление"
+                  << std::setw(col6) << "Адрес"
+                  << std::setw(col7) << "Группа" << "\n";
+        
+        std::cout << std::string(80, '-') << "\n";
+        
+        // Выводим студентов
+        for (int i = 0; i < students.getSize(); i++) {
+            printStudentFormatted(students[i], i);
+        }
+        
         std::cout << "===============================\n";
     }
     
@@ -474,7 +581,16 @@ public:
             int birthYear = yearDist(gen);
             Date birthDate(dayDist(gen), monthDist(gen), birthYear);
             Date admissionDate(1, 9, birthYear + 18);
-            Date expulsionDate(30, 6, birthYear + 22);
+            
+            // 50% шанс, что студент еще учится
+            bool currentlyStudying = (std::rand() % 2) == 0;
+            Date expulsionDate;
+            if (currentlyStudying) {
+                expulsionDate = Date(30, 6, birthYear + 22); // Будет отчислен в будущем
+            } else {
+                expulsionDate = Date(30, 6, birthYear + 19 + std::rand() % 3); // Уже отчислен
+            }
+            
             std::string address = addresses[addressDist(gen)];
             std::string group = groups[groupDist(gen)];
             

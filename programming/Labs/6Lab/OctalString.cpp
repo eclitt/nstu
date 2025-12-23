@@ -130,83 +130,40 @@ void OctalString::setNumber(long long num) {
 
 // Запись в текстовый файл
 void OctalString::writeToTextFile(std::ofstream& ofs) const {
-    if (!ofs.is_open() || ofs.fail()) {
-        throw FileException("Ошибка записи OctalString в файл: файл не открыт");
-    }
-    
     // Сначала записываем тип объекта
     ofs << static_cast<int>(getType()) << " ";
-    if (ofs.fail() || ofs.bad()) {
-        throw FileException("Ошибка записи типа OctalString в файл");
-    }
     
     // Затем длину строки и саму строку
     ofs << length << " ";
-    if (ofs.fail() || ofs.bad()) {
-        throw FileException("Ошибка записи длины OctalString в файл");
-    }
-    
     if (length > 0) {
         ofs.write(str, length);
-        if (ofs.fail() || ofs.bad()) {
-            throw FileException("Ошибка записи данных OctalString в файл");
-        }
     }
     
     // И числовое значение
     ofs << " " << number;
-    if (ofs.fail() || ofs.bad()) {
-        throw FileException("Ошибка записи числового значения OctalString в файл");
-    }
 }
 
 // Чтение из текстового файла
 void OctalString::readFromTextFile(std::ifstream& ifs) {
-    if (!ifs.is_open() || ifs.fail()) {
-        throw FileException("Ошибка чтения OctalString из файла: файл не открыт или поврежден");
-    }
-    
     // Пропускаем тип (он уже считан фабричным методом)
     // Сначала читаем базовую часть (длину и строку)
     int len;
     ifs >> len;
-    
-    if (ifs.fail() || ifs.bad()) {
-        throw FileException("Ошибка чтения длины OctalString из файла");
-    }
-    
-    if (len < 0 || len > 1000000) {
-        throw OutOfRangeException("Некорректная длина OctalString в файле: " + std::to_string(len));
-    }
-    
     ifs.get(); // Пропускаем пробел
     
     if (len > 0) {
-        char* buffer = nullptr;
+        char* buffer = new char[len + 1];
+        ifs.read(buffer, len);
+        buffer[len] = '\0';
+        
+        // Используем setString для проверки корректности
         try {
-            buffer = new (std::nothrow) char[len + 1];
-            if (!buffer) {
-                throw MemoryException("Не удалось выделить память для чтения OctalString из файла");
-            }
-            ifs.read(buffer, len);
-            if (ifs.fail() || ifs.bad()) {
-                delete[] buffer;
-                throw FileException("Ошибка чтения данных OctalString из файла");
-            }
-            buffer[len] = '\0';
-            
-            // Используем setString для проверки корректности
-            try {
-                this->setString(buffer);
-            } catch (const std::exception& e) {
-                delete[] buffer;
-                throw; // Перебрасываем исключение дальше
-            }
+            this->setString(buffer);
+        } catch (const std::exception& e) {
             delete[] buffer;
-        } catch (const std::bad_alloc&) {
-            delete[] buffer;
-            throw MemoryException("Недостаточно памяти для чтения OctalString из файла");
+            throw; // Перебрасываем исключение дальше
         }
+        delete[] buffer;
     } else {
         this->setString("");
         number = 0;
@@ -214,9 +171,6 @@ void OctalString::readFromTextFile(std::ifstream& ifs) {
     
     // Считываем числовое значение (если есть пробел перед ним)
     ifs >> number;
-    if (ifs.fail() || ifs.bad()) {
-        throw FileException("Ошибка чтения числового значения OctalString из файла");
-    }
 }
 
 // Запись в бинарный файл
@@ -226,9 +180,6 @@ void OctalString::writeBinary(std::ofstream& ofs) const {
     
     // Затем записываем числовое значение
     ofs.write(reinterpret_cast<const char*>(&number), sizeof(number));
-    if (ofs.fail() || ofs.bad()) {
-        throw FileException("Ошибка записи числового значения OctalString в бинарный файл");
-    }
 }
 
 // Чтение из бинарного файла
@@ -238,9 +189,6 @@ void OctalString::readBinary(std::ifstream& ifs) {
     
     // Затем считываем числовое значение
     ifs.read(reinterpret_cast<char*>(&number), sizeof(number));
-    if (ifs.fail() || ifs.bad()) {
-        throw FileException("Ошибка чтения числового значения OctalString из бинарного файла");
-    }
 }
 
 // Оператор сложения
@@ -305,7 +253,6 @@ OctalString OctalString::operator/(long long num) const {
         throw DivisionByZeroException("Попытка деления восьмеричного числа на ноль");
     }
     
-    // Проверка на переполнение при делении
     long long result = number / num;
     return OctalString(result);
 }

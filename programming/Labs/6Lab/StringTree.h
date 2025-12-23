@@ -3,7 +3,6 @@
 
 #include "String.h"
 #include <vector>
-
 // Бинарное дерево, хранящее указатели на объекты и демонстрирующее полиморфизм
 // Узлы дерева содержат указатели на базовый класс String, поэтому в дереве
 // могут находиться объекты String, OctalString, TimedString и любых потомков.
@@ -23,12 +22,15 @@ private:
 
     // Вспомогательные методы
     void deleteTree(Node* node);
-    void deleteTreeNodesOnly(Node* node);  // Удаляет только узлы, не объекты
+    void deleteNodesOnly(Node* node);  // Удаляет только узлы, не объекты данных
     void inorderCollect(Node* node, std::vector<String*>& arr) const;
     Node* buildBalanced(std::vector<String*>& arr, int l, int r);
     void printNode(Node* node) const;
     int indexOfNode(Node* node, const char* value, int& currentIndex) const;
     String* findInNode(Node* node, const char* value) const;
+    void demonstratePolymorphismNode(Node* node, int& index) const;
+    void saveNodeToText(Node* node, std::ofstream& ofs) const;
+    void saveNodeToBinary(Node* node, std::ofstream& ofs) const;
 
 public:
     StringTree();
@@ -61,6 +63,15 @@ public:
 
     // Просмотр всей структуры (симметричный обход)
     void printAll() const;
+    
+    // Демонстрация полиморфизма: вывод информации о типах объектов
+    void demonstratePolymorphism() const;
+    
+    // Методы для работы с файлами (используют полиморфизм)
+    void saveToTextFile(const char* filename) const;
+    void loadFromTextFile(const char* filename);
+    void saveToBinaryFile(const char* filename) const;
+    void loadFromBinaryFile(const char* filename);
 };
 
 #endif

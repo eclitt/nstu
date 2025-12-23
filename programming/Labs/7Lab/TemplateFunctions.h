@@ -4,6 +4,7 @@
 #include "Tree.h"
 #include <iostream>
 #include <algorithm>
+#include <cstring>
 
 // Шаблонная функция для поиска максимального элемента в дереве
 template<typename T>

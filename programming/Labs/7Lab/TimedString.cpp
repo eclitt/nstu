@@ -1,5 +1,4 @@
 #include "TimedString.h"
-#include "Exceptions.h"
 #include <cstring>
 #include <iostream>
 
@@ -47,82 +46,37 @@ std::string TimedString::getCreationTimeString() const {
 
 // Запись в текстовый файл
 void TimedString::writeToTextFile(std::ofstream& ofs) const {
-    if (!ofs.is_open() || ofs.fail()) {
-        throw FileException("Ошибка записи TimedString в файл: файл не открыт");
-    }
-    
     // Сначала записываем тип объекта
     ofs << static_cast<int>(getType()) << " ";
-    if (ofs.fail() || ofs.bad()) {
-        throw FileException("Ошибка записи типа TimedString в файл");
-    }
     
     // Затем длину строки и саму строку
     ofs << length << " ";
-    if (ofs.fail() || ofs.bad()) {
-        throw FileException("Ошибка записи длины TimedString в файл");
-    }
-    
     if (length > 0) {
         ofs.write(str, length);
-        if (ofs.fail() || ofs.bad()) {
-            throw FileException("Ошибка записи данных TimedString в файл");
-        }
     }
     
     // И время создания
     ofs << " " << creationTime;
-    if (ofs.fail() || ofs.bad()) {
-        throw FileException("Ошибка записи времени создания TimedString в файл");
-    }
 }
 
 // Чтение из текстового файла
 void TimedString::readFromTextFile(std::ifstream& ifs) {
-    if (!ifs.is_open() || ifs.fail()) {
-        throw FileException("Ошибка чтения TimedString из файла: файл не открыт или поврежден");
-    }
-    
     // Считываем длину строки
     ifs >> length;
-    if (ifs.fail() || ifs.bad()) {
-        throw FileException("Ошибка чтения длины TimedString из файла");
-    }
-    
-    if (length < 0 || length > 1000000) {
-        throw OutOfRangeException("Некорректная длина TimedString в файле: " + std::to_string(length));
-    }
-    
     ifs.get(); // Пропускаем пробел
     
     if (length > 0) {
-        char* buffer = nullptr;
-        try {
-            buffer = new (std::nothrow) char[length + 1];
-            if (!buffer) {
-                throw MemoryException("Не удалось выделить память для чтения TimedString из файла");
-            }
-            ifs.read(buffer, length);
-            if (ifs.fail() || ifs.bad()) {
-                delete[] buffer;
-                throw FileException("Ошибка чтения данных TimedString из файла");
-            }
-            buffer[length] = '\0';
-            this->setString(buffer);
-            delete[] buffer;
-        } catch (const std::bad_alloc&) {
-            delete[] buffer;
-            throw MemoryException("Недостаточно памяти для чтения TimedString из файла");
-        }
+        char* buffer = new char[length + 1];
+        ifs.read(buffer, length);
+        buffer[length] = '\0';
+        this->setString(buffer);
+        delete[] buffer;
     } else {
         this->setString("");
     }
     
     // Считываем время создания
     ifs >> creationTime;
-    if (ifs.fail() || ifs.bad()) {
-        throw FileException("Ошибка чтения времени создания TimedString из файла");
-    }
 }
 
 // Запись в бинарный файл
@@ -132,9 +86,6 @@ void TimedString::writeBinary(std::ofstream& ofs) const {
     
     // Затем записываем время создания
     ofs.write(reinterpret_cast<const char*>(&creationTime), sizeof(creationTime));
-    if (ofs.fail() || ofs.bad()) {
-        throw FileException("Ошибка записи времени создания TimedString в бинарный файл");
-    }
 }
 
 // Чтение из бинарного файла
@@ -144,9 +95,6 @@ void TimedString::readBinary(std::ifstream& ifs) {
     
     // Затем считываем время создания
     ifs.read(reinterpret_cast<char*>(&creationTime), sizeof(creationTime));
-    if (ifs.fail() || ifs.bad()) {
-        throw FileException("Ошибка чтения времени создания TimedString из бинарного файла");
-    }
 }
 
 // Оператор присваивания (TimedString)

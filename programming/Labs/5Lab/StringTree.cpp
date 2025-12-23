@@ -1,6 +1,7 @@
 #include "StringTree.h"
 #include <iostream>
 #include <cstring>
+#include <fstream>
 
 StringTree::StringTree() : root(nullptr), nodeCount(0) {}
 
@@ -13,6 +14,14 @@ void StringTree::deleteTree(Node* node) {
     deleteTree(node->left);
     deleteTree(node->right);
     delete node->data;   // дерево владеет объектами
+    delete node;
+}
+
+void StringTree::deleteNodesOnly(Node* node) {
+    if (!node) return;
+    deleteNodesOnly(node->left);
+    deleteNodesOnly(node->right);
+    // НЕ удаляем node->data, только сам узел
     delete node;
 }
 
@@ -50,7 +59,7 @@ void StringTree::insertAt(int index, String* obj) {
         return;
     }
 
-    // Собираем все элементы в вектор
+    // Собираем все элементы в вектор (только указатели, не удаляем объекты)
     std::vector<String*> arr;
     arr.reserve(nodeCount + 1);
     inorderCollect(root, arr);
@@ -58,8 +67,12 @@ void StringTree::insertAt(int index, String* obj) {
     // Вставляем новый элемент в нужную позицию (логика «списка»)
     arr.insert(arr.begin() + index, obj);
 
+    // Удаляем только узлы дерева, но НЕ объекты данных
+    // (объекты остаются в векторе и будут использованы при перестройке)
+    deleteNodesOnly(root);
+    root = nullptr;
+
     // Перестраиваем сбалансированное дерево из массива
-    deleteTree(root);
     root = buildBalanced(arr, 0, static_cast<int>(arr.size()) - 1);
     nodeCount = static_cast<int>(arr.size());
 }
@@ -79,8 +92,12 @@ bool StringTree::removeAt(int index) {
     delete arr[index];
     arr.erase(arr.begin() + index);
 
+    // Удаляем только узлы дерева, но НЕ объекты данных
+    // (оставшиеся объекты остаются в векторе и будут использованы при перестройке)
+    deleteNodesOnly(root);
+    root = nullptr;
+
     // Перестраиваем дерево
-    deleteTree(root);
     if (arr.empty()) {
         root = nullptr;
         nodeCount = 0;
@@ -135,6 +152,27 @@ void StringTree::printNode(Node* node) const {
     printNode(node->right);
 }
 
+void StringTree::saveNodeToText(Node* node, std::ofstream& ofs) const {
+    if (!node) return;
+    saveNodeToText(node->left, ofs);
+    if (node->data) {
+        // ПОЛИМОРФИЗМ: вызывается writeToTextFile() соответствующего типа
+        node->data->writeToTextFile(ofs);
+        ofs << std::endl;
+    }
+    saveNodeToText(node->right, ofs);
+}
+
+void StringTree::saveNodeToBinary(Node* node, std::ofstream& ofs) const {
+    if (!node) return;
+    saveNodeToBinary(node->left, ofs);
+    if (node->data) {
+        // ПОЛИМОРФИЗМ: вызывается writeBinary() соответствующего типа
+        node->data->writeBinary(ofs);
+    }
+    saveNodeToBinary(node->right, ofs);
+}
+
 void StringTree::printAll() const {
     if (!root) {
         std::cout << "Дерево пусто." << std::endl;
@@ -142,6 +180,144 @@ void StringTree::printAll() const {
     }
     std::cout << "\nСодержимое дерева (симметричный обход):" << std::endl;
     printNode(root);
+}
+
+// Вспомогательная функция для демонстрации полиморфизма
+void StringTree::demonstratePolymorphismNode(Node* node, int& index) const {
+    if (!node) return;
+    demonstratePolymorphismNode(node->left, index);
+    if (node->data) {
+        // ПОЛИМОРФИЗМ: через указатель на базовый класс String* вызываются
+        // виртуальные функции производных классов
+        std::cout << "[" << index << "] Указатель: String*, ";
+        std::cout << "Реальный тип (через getTypeName()): " << node->data->getTypeName() << ", ";
+        std::cout << "Тип (через getType()): " << static_cast<int>(node->data->getType()) << ", ";
+        std::cout << "Содержимое: \"" << node->data->getString() << "\"" << std::endl;
+        // Полиморфный вызов print() - каждый тип выводит по-своему
+        std::cout << "  -> Вызов print() (полиморфный): ";
+        node->data->print();
+        index++;
+    }
+    demonstratePolymorphismNode(node->right, index);
+}
+
+void StringTree::demonstratePolymorphism() const {
+    if (!root) {
+        std::cout << "Дерево пусто. Нет объектов для демонстрации полиморфизма." << std::endl;
+        return;
+    }
+    std::cout << "\n=== ДЕМОНСТРАЦИЯ ПОЛИМОРФИЗМА ===" << std::endl;
+    std::cout << "Все объекты хранятся как String*, но каждый сохраняет свой реальный тип!" << std::endl;
+    std::cout << "При вызове виртуальных функций вызывается версия производного класса.\n" << std::endl;
+    
+    int index = 0;
+    demonstratePolymorphismNode(root, index);
+    
+    std::cout << "\n=== КОНЕЦ ДЕМОНСТРАЦИИ ПОЛИМОРФИЗМА ===" << std::endl;
+}
+
+void StringTree::saveToTextFile(const char* filename) const {
+    std::ofstream ofs(filename, std::ios::out);
+    if (!ofs.is_open()) {
+        std::cerr << "Ошибка открытия файла для записи: " << filename << std::endl;
+        return;
+    }
+    
+    // Записываем количество элементов
+    ofs << nodeCount << std::endl;
+    
+    // Используем полиморфизм: для каждого объекта вызывается его виртуальный метод writeToTextFile
+    saveNodeToText(root, ofs);
+    ofs.close();
+    std::cout << "Дерево сохранено в текстовый файл: " << filename << std::endl;
+}
+
+void StringTree::loadFromTextFile(const char* filename) {
+    std::ifstream ifs(filename, std::ios::in);
+    if (!ifs.is_open()) {
+        std::cerr << "Ошибка открытия файла для чтения: " << filename << std::endl;
+        return;
+    }
+    
+    // Очищаем текущее дерево
+    clear();
+    
+    int count;
+    ifs >> count;
+    ifs.get(); // Пропускаем перевод строки
+    
+    // Используем полиморфизм: создаем объекты правильного типа через фабричный метод
+    for (int i = 0; i < count; i++) {
+        int typeInt;
+        ifs >> typeInt;
+        StringType type = static_cast<StringType>(typeInt);
+        
+        // ПОЛИМОРФИЗМ: создаем объект нужного типа через фабричный метод
+        String* obj = String::createFromType(type);
+        if (obj) {
+            // ПОЛИМОРФИЗМ: вызывается readFromTextFile() соответствующего типа
+            obj->readFromTextFile(ifs);
+            add(obj);
+        }
+    }
+    
+    ifs.close();
+    std::cout << "Дерево загружено из текстового файла: " << filename << std::endl;
+}
+
+void StringTree::saveToBinaryFile(const char* filename) const {
+    std::ofstream ofs(filename, std::ios::out | std::ios::binary);
+    if (!ofs.is_open()) {
+        std::cerr << "Ошибка открытия файла для записи: " << filename << std::endl;
+        return;
+    }
+    
+    // Записываем количество элементов
+    ofs.write(reinterpret_cast<const char*>(&nodeCount), sizeof(nodeCount));
+    
+    // Используем полиморфизм: для каждого объекта вызывается его виртуальный метод writeBinary
+    saveNodeToBinary(root, ofs);
+    ofs.close();
+    std::cout << "Дерево сохранено в бинарный файл: " << filename << std::endl;
+}
+
+void StringTree::loadFromBinaryFile(const char* filename) {
+    std::ifstream ifs(filename, std::ios::in | std::ios::binary);
+    if (!ifs.is_open()) {
+        std::cerr << "Ошибка открытия файла для чтения: " << filename << std::endl;
+        return;
+    }
+    
+    // Очищаем текущее дерево
+    clear();
+    
+    int count;
+    ifs.read(reinterpret_cast<char*>(&count), sizeof(count));
+    
+    // Используем полиморфизм: создаем объекты правильного типа
+    for (int i = 0; i < count; i++) {
+        // Сохраняем текущую позицию в файле
+        std::streampos pos = ifs.tellg();
+        
+        // Читаем тип объекта (он записан первым в writeBinary)
+        StringType type;
+        ifs.read(reinterpret_cast<char*>(&type), sizeof(type));
+        
+        // ПОЛИМОРФИЗМ: создаем объект нужного типа через фабричный метод
+        String* obj = String::createFromType(type);
+        if (obj) {
+            // Возвращаемся к позиции перед типом, так как readBinary сам прочитает тип
+            ifs.seekg(pos);
+            
+            // ПОЛИМОРФИЗМ: вызывается readBinary() соответствующего типа
+            // readBinary прочитает тип и данные объекта
+            obj->readBinary(ifs);
+            add(obj);
+        }
+    }
+    
+    ifs.close();
+    std::cout << "Дерево загружено из бинарного файла: " << filename << std::endl;
 }
 
 

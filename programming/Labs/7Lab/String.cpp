@@ -25,7 +25,7 @@ String::String(const char* s) {
             if (!str) {
                 throw MemoryException("Не удалось выделить память для строки длиной " + std::to_string(length));
             }
-            strcpy(str, s);
+        strcpy(str, s);
         } catch (const std::bad_alloc&) {
             throw MemoryException("Недостаточно памяти для создания строки");
         }
@@ -45,7 +45,7 @@ String::String(const String& other) {
             if (!str) {
                 throw MemoryException("Не удалось выделить память при копировании строки");
             }
-            strcpy(str, other.str);
+        strcpy(str, other.str);
         } catch (const std::bad_alloc&) {
             throw MemoryException("Недостаточно памяти при копировании строки");
         }
@@ -75,7 +75,7 @@ void String::setString(const char* s) {
             if (!str) {
                 throw MemoryException("Не удалось выделить память для установки строки");
             }
-            strcpy(str, s);
+        strcpy(str, s);
         } catch (const std::bad_alloc&) {
             throw MemoryException("Недостаточно памяти для установки строки");
         }
@@ -118,11 +118,11 @@ String String::operator+(const String& other) const {
         if (!newStr) {
             throw MemoryException("Не удалось выделить память для сложения строк");
         }
-        strcpy(newStr, str);
-        strcat(newStr, other.str);
-        String result(newStr);
-        delete[] newStr;
-        return result;
+    strcpy(newStr, str);
+    strcat(newStr, other.str);
+    String result(newStr);
+    delete[] newStr;
+    return result;
     } catch (const std::bad_alloc&) {
         delete[] newStr;
         throw MemoryException("Недостаточно памяти для сложения строк");
@@ -147,11 +147,11 @@ String String::operator+(const char* other) const {
         if (!newStr) {
             throw MemoryException("Не удалось выделить память для сложения строк");
         }
-        strcpy(newStr, str);
-        strcat(newStr, other);
-        String result(newStr);
-        delete[] newStr;
-        return result;
+    strcpy(newStr, str);
+    strcat(newStr, other);
+    String result(newStr);
+    delete[] newStr;
+    return result;
     } catch (const std::bad_alloc&) {
         delete[] newStr;
         throw MemoryException("Недостаточно памяти для сложения строк");
@@ -169,7 +169,7 @@ String& String::operator=(const String& other) {
                 if (!str) {
                     throw MemoryException("Не удалось выделить память при присваивании");
                 }
-                strcpy(str, other.str);
+            strcpy(str, other.str);
             } catch (const std::bad_alloc&) {
                 throw MemoryException("Недостаточно памяти при присваивании");
             }
@@ -232,11 +232,11 @@ String operator+(const char* lhs, const String& rhs) {
         if (!newStr) {
             throw MemoryException("Не удалось выделить память для сложения строк");
         }
-        strcpy(newStr, lhs);
-        strcat(newStr, rhs.str);
-        String result(newStr);
-        delete[] newStr;
-        return result;
+    strcpy(newStr, lhs);
+    strcat(newStr, rhs.str);
+    String result(newStr);
+    delete[] newStr;
+    return result;
     } catch (const std::bad_alloc&) {
         delete[] newStr;
         throw MemoryException("Недостаточно памяти для сложения строк");
@@ -320,14 +320,14 @@ void String::readFromTextFile(std::ifstream& ifs) {
             if (!buffer) {
                 throw MemoryException("Не удалось выделить память для чтения строки из файла");
             }
-            ifs.read(buffer, len);
+        ifs.read(buffer, len);
             if (ifs.fail() || ifs.bad()) {
                 delete[] buffer;
                 throw FileException("Ошибка чтения данных строки из файла");
             }
-            buffer[len] = '\0';
-            this->setString(buffer);
-            delete[] buffer;
+        buffer[len] = '\0';
+        this->setString(buffer);
+        delete[] buffer;
         } catch (const std::bad_alloc&) {
             delete[] buffer;
             throw MemoryException("Недостаточно памяти для чтения строки из файла");
@@ -401,13 +401,13 @@ void String::readBinary(std::ifstream& ifs) {
             if (!str) {
                 throw MemoryException("Не удалось выделить память для чтения строки из бинарного файла");
             }
-            ifs.read(str, length);
+        ifs.read(str, length);
             if (ifs.fail() || ifs.bad()) {
                 delete[] str;
                 str = nullptr;
                 throw FileException("Ошибка чтения данных строки из бинарного файла");
             }
-            str[length] = '\0';
+        str[length] = '\0';
         } catch (const std::bad_alloc&) {
             throw MemoryException("Недостаточно памяти для чтения строки из бинарного файла");
         }

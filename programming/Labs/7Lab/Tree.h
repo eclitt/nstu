@@ -4,9 +4,8 @@
 #include "Exceptions.h"
 #include <vector>
 #include <iostream>
-#include <cstring>
+#include <algorithm>
 
-// Шаблонный класс бинарного дерева для хранения объектов любого типа
 template<typename T>
 class Tree {
 private:

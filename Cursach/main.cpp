@@ -6,6 +6,8 @@
 class Menu {
 private:
     StudentManager manager;
+    int currentSortType; // 0-нет, 1-фамилия ▲, 2-фамилия ▼, 3-дата рождения, 4-группа
+    bool currentSortAscending;
     
     void clearInput() {
         std::cin.clear();
@@ -49,22 +51,16 @@ private:
         clearInput();
         Date admissionDate(d, m, y);
         
-        // Спрашиваем, обучается ли студент сейчас
-        std::cout << "Студент обучается сейчас? (1 - да, 0 - нет): ";
-        int isStudying;
-        std::cin >> isStudying;
-        clearInput();
-        
+        int statusChoice = getIntInput("Статус студента:\n1. Обучается\n2. Отчислен\nВыберите: ", 1, 2);
         Date expulsionDate;
-        if (isStudying == 1) {
-            // Если обучается, устанавливаем дату отчисления в будущем
-            expulsionDate = Date(30, 6, admissionDate.getYear() + 4);
-        } else {
+        
+        if (statusChoice == 2) {
             std::cout << "Дата отчисления (ДД ММ ГГГГ): ";
             std::cin >> d >> m >> y;
             clearInput();
             expulsionDate = Date(d, m, y);
         }
+        // Если обучается, дата отчисления остаётся невалидной
         
         std::string address = getStringInput("Адрес: ");
         std::string group = getStringInput("Группа: ");
@@ -78,16 +74,43 @@ private:
             return;
         }
         
-        std::cout << "Список студентов:\n";
         for (int i = 0; i < manager.getStudentCount(); i++) {
             std::cout << "[" << i + 1 << "] " << manager.getStudent(i).getLastName() 
-                      << " (" << manager.getStudent(i).getGroup() << ")\n";
+                      << " (" << manager.getStudent(i).getGroup() << ")";
+            
+            if (manager.getStudent(i).isCurrentlyStudying()) {
+                std::cout << " [обучается]";
+            } else {
+                std::cout << " [отчислен]";
+            }
+            std::cout << "\n";
         }
     }
     
     void addStudentMenu() {
         Student student = inputStudent();
-        manager.addStudent(student);
+        
+        // Если список отсортирован, добавляем с сохранением порядка
+        if (currentSortType != 0) {
+            switch (currentSortType) {
+                case 1: // фамилия ▲
+                    manager.addStudentSorted(student, true);
+                    break;
+                case 2: // фамилия ▼
+                    manager.addStudentSorted(student, false);
+                    break;
+                case 3: // дата рождения
+                    manager.addStudentSortedByBirthDate(student, currentSortAscending);
+                    break;
+                case 4: // группа
+                    manager.addStudentSortedByGroup(student, currentSortAscending);
+                    break;
+                default:
+                    manager.addStudent(student);
+            }
+        } else {
+            manager.addStudent(student);
+        }
         std::cout << "Студент добавлен!\n";
     }
     
@@ -113,7 +136,7 @@ private:
             return;
         }
         
-        int choice = getIntInput("1. Удалить по номеру\n2. Удалить по фамилии\n3. Удалить по группе\n4. Удалить по шаблону фамилии и группе\nВыберите: ", 1, 4);
+        int choice = getIntInput("1. Удалить по номеру\n2. Удалить по фамилии\n3. Удалить по группе\n4. Удалить по фамилии и группе\nВыберите: ", 1, 4);
         
         switch (choice) {
             case 1: {
@@ -136,9 +159,9 @@ private:
                 break;
             }
             case 4: {
-                std::string pattern = getStringInput("Шаблон фамилии: ");
+                std::string lastName = getStringInput("Фамилия: ");
                 std::string group = getStringInput("Группа: ");
-                manager.removeByLastNamePatternAndGroup(pattern, group);
+                manager.removeStudentByLastNameAndGroup(lastName, group);
                 std::cout << "Удалено!\n";
                 break;
             }
@@ -151,77 +174,40 @@ private:
             return;
         }
         
-        int choice = getIntInput("Редактировать по:\n1. Номеру\n2. Поиску (группа + шаблон фамилии)\nВыберите: ", 1, 2);
+        printStudentList();
+        int index = getIntInput("Номер студента для редактирования: ", 
+                               1, manager.getStudentCount());
         
-        if (choice == 1) {
-            // Редактирование по номеру
-            printStudentList();
-            int index = getIntInput("Номер студента для редактирования: ", 
-                                   1, manager.getStudentCount());
-            
-            std::cout << "\nТекущие данные:\n";
-            manager.printStudent(index - 1);
-            
-            std::cout << "\nВведите новые данные:\n";
-            Student newStudent = inputStudent();
-            manager.updateStudent(index - 1, newStudent);
-            std::cout << "Данные обновлены!\n";
-        } else {
-            // Редактирование по поиску
-            std::string group = getStringInput("Введите группу: ");
-            std::string pattern = getStringInput("Введите шаблон фамилии: ");
-            
-            auto results = manager.searchByPatternAndGroup(pattern, group);
-            if (results.empty()) {
-                std::cout << "Студенты не найдены.\n";
-                return;
+        std::cout << "\nТекущие данные:\n";
+        manager.printStudentDetails(index - 1);
+        
+        Student newStudent = inputStudent();
+        manager.updateStudent(index - 1, newStudent);
+        std::cout << "Данные обновлены!\n";
+    }
+    
+    void searchSingleStudentMenu() {
+        int choice = getIntInput("1. Поиск по номеру\n2. Поиск по фамилии и группе\nВыберите: ", 1, 2);
+        
+        switch (choice) {
+            case 1: {
+                printStudentList();
+                int index = getIntInput("Номер студента: ", 1, manager.getStudentCount());
+                std::cout << "\n=== Информация о студенте ===\n";
+                manager.printStudentDetails(index - 1);
+                break;
             }
-            
-            std::cout << "\nНайдено " << results.size() << " студентов:\n";
-            for (int i = 0; i < results.size(); i++) {
-                std::cout << "[" << i + 1 << "] " << results[i].getLastName() 
-                          << " (" << results[i].getGroup() << ")\n";
-            }
-            
-            int studentIndex = getIntInput("Выберите студента для редактирования (0 - отмена): ", 
-                                          0, results.size());
-            if (studentIndex == 0) {
-                return;
-            }
-            
-            std::cout << "\nТекущие данные:\n";
-            std::cout << "Фамилия: " << results[studentIndex - 1].getLastName() << "\n"
-                      << "Дата рождения: " << results[studentIndex - 1].getBirthDate() << "\n"
-                      << "Дата поступления: " << results[studentIndex - 1].getAdmissionDate() << "\n"
-                      << "Дата отчисления: " << results[studentIndex - 1].getExpulsionDate() << "\n"
-                      << "Адрес: " << results[studentIndex - 1].getAddress() << "\n"
-                      << "Группа: " << results[studentIndex - 1].getGroup() << "\n";
-            
-            std::cout << "\nВведите новые данные:\n";
-            Student newStudent = inputStudent();
-            
-            // Найти и обновить студента в основном списке
-            bool updated = false;
-            for (int i = 0; i < manager.getStudentCount(); i++) {
-                if (manager.getStudent(i).getGroup() == group && 
-                    manager.getStudent(i).getLastName().find(pattern) != std::string::npos &&
-                    manager.getStudent(i).getLastName() == results[studentIndex - 1].getLastName()) {
-                    manager.updateStudent(i, newStudent);
-                    updated = true;
-                    break;
-                }
-            }
-            
-            if (updated) {
-                std::cout << "Данные обновлены!\n";
-            } else {
-                std::cout << "Ошибка обновления.\n";
+            case 2: {
+                std::string lastName = getStringInput("Фамилия: ");
+                std::string group = getStringInput("Группа: ");
+                manager.printStudentByLastNameAndGroup(lastName, group);
+                break;
             }
         }
     }
     
     void searchMenu() {
-        int choice = getIntInput("1. По группе\n2. По фамилии\n3. По шаблону фамилии\n4. Обучающиеся сейчас\n5. По шаблону фамилии и группе\nВыберите: ", 1, 5);
+        int choice = getIntInput("1. По группе\n2. По фамилии\n3. По шаблону фамилии\n4. Обучающиеся сейчас\nВыберите: ", 1, 4);
         
         std::vector<Student> results;
         
@@ -245,12 +231,6 @@ private:
                 results = manager.searchCurrentlyStudying();
                 break;
             }
-            case 5: {
-                std::string pattern = getStringInput("Шаблон фамилии: ");
-                std::string group = getStringInput("Группа: ");
-                results = manager.searchByPatternAndGroup(pattern, group);
-                break;
-            }
         }
         
         if (results.empty()) {
@@ -258,68 +238,27 @@ private:
             return;
         }
         
-        std::cout << "Найдено " << results.size() << " студентов:\n";
-        
-        // Выводим заголовок
-        const int col1 = 4;   // №
-        const int col2 = 15;  // Фамилия
-        const int col3 = 12;  // Дата рождения
-        const int col4 = 12;  // Дата поступления
-        const int col5 = 12;  // Дата отчисления
-        const int col6 = 20;  // Адрес
-        const int col7 = 10;  // Группа
-        
-        std::cout << std::left 
-                  << std::setw(col1) << "№" 
-                  << std::setw(col2) << "Фамилия"
-                  << std::setw(col3) << "Рождение"
-                  << std::setw(col4) << "Поступление"
-                  << std::setw(col5) << "Отчисление"
-                  << std::setw(col6) << "Адрес"
-                  << std::setw(col7) << "Группа" << "\n";
-        
-        std::cout << std::string(80, '-') << "\n";
-        
-        // Выводим результаты
+        std::cout << "\nНайдено " << results.size() << " студентов:\n";
         for (int i = 0; i < results.size(); i++) {
-            const Student& student = results[i];
+            const auto& student = results[i];
+            std::cout << i+1 << ". " << student.getLastName() 
+                      << " (" << student.getGroup() << ")";
             
-            std::cout << std::left << std::setw(col1) << i + 1
-                      << std::setw(col2) << student.getLastName()
-                      << std::setw(col3) << student.getBirthDate()
-                      << std::setw(col4) << student.getAdmissionDate();
-            
-            // Выводим дату отчисления только если студент отчислен
-            if (!student.isCurrentlyStudying()) {
-                std::cout << std::setw(col5) << student.getExpulsionDate();
+            if (student.isCurrentlyStudying()) {
+                std::cout << " [обучается]";
             } else {
-                std::cout << std::setw(col5) << " ";
+                std::cout << " [отчислен]";
             }
-            
-            std::cout << std::setw(col6) << student.getAddress() 
-                      << std::setw(col7) << student.getGroup() << "\n";
+            std::cout << "\n";
         }
         
-        // Предлагаем просмотреть детальную информацию
+        // Предложить посмотреть детали
         if (!results.empty()) {
-            std::cout << "\nХотите просмотреть детальную информацию о студенте? (1 - да, 0 - нет): ";
-            int viewDetail;
-            std::cin >> viewDetail;
-            clearInput();
-            
-            if (viewDetail == 1) {
-                int studentIndex = getIntInput("Введите номер студента из списка: ", 1, results.size());
-                
-                // Найти студента в основном списке
-                for (int i = 0; i < manager.getStudentCount(); i++) {
-                    const Student& mainStudent = manager.getStudent(i);
-                    if (mainStudent.getLastName() == results[studentIndex - 1].getLastName() &&
-                        mainStudent.getGroup() == results[studentIndex - 1].getGroup() &&
-                        mainStudent.getBirthDate() == results[studentIndex - 1].getBirthDate()) {
-                        manager.printStudent(i);
-                        break;
-                    }
-                }
+            char viewDetails = getStringInput("\nПоказать детали студента? (y/n): ")[0];
+            if (viewDetails == 'y' || viewDetails == 'Y') {
+                int studentNum = getIntInput("Номер студента из списка: ", 1, results.size());
+                std::cout << "\n=== Информация о студенте ===\n";
+                std::cout << results[studentNum - 1];
             }
         }
     }
@@ -328,16 +267,28 @@ private:
         int choice = getIntInput("1. По фамилии ▲\n2. По фамилии ▼\n3. По дате рождения\n4. По группе\nВыберите: ", 1, 4);
         
         switch (choice) {
-            case 1: manager.sortByLastName(true); break;
-            case 2: manager.sortByLastName(false); break;
+            case 1: 
+                manager.sortByLastName(true); 
+                currentSortType = 1;
+                currentSortAscending = true;
+                break;
+            case 2: 
+                manager.sortByLastName(false); 
+                currentSortType = 2;
+                currentSortAscending = false;
+                break;
             case 3: {
                 bool asc = getIntInput("1. ▲\n2. ▼\nВыберите: ", 1, 2) == 1;
                 manager.sortByBirthDate(asc);
+                currentSortType = 3;
+                currentSortAscending = asc;
                 break;
             }
             case 4: {
                 bool asc = getIntInput("1. ▲\n2. ▼\nВыберите: ", 1, 2) == 1;
                 manager.sortByGroup(asc);
+                currentSortType = 4;
+                currentSortAscending = asc;
                 break;
             }
         }
@@ -358,70 +309,50 @@ private:
         } else {
             if (manager.loadFromFile(filename)) {
                 std::cout << "Загружено!\n";
+                // Сброс типа сортировки после загрузки
+                currentSortType = 0;
             } else {
                 std::cout << "Ошибка загрузки!\n";
             }
         }
     }
     
-    void addSortedMenu() {
-        Student student = inputStudent();
-        int sortField = getIntInput("Добавить с сохранением порядка по:\n1. Фамилии\n2. Дате рождения\n3. Группе\nВыберите: ", 1, 3);
-        int order = getIntInput("1. По возрастанию\n2. По убыванию\nВыберите: ", 1, 2);
-        
-        switch (sortField) {
-            case 1:
-                manager.addStudentSortedByLastName(student, order == 1);
-                break;
-            case 2:
-                manager.addStudentSortedByBirthDate(student, order == 1);
-                break;
-            case 3:
-                manager.addStudentSortedByGroup(student, order == 1);
-                break;
-        }
-        
-        std::cout << "Студент добавлен с сохранением порядка!\n";
-    }
-    
-    void viewStudentMenu() {
-        if (manager.isEmpty()) {
-            std::cout << "Список пуст.\n";
-            return;
-        }
-        
-        printStudentList();
-        int index = getIntInput("Введите номер студента для просмотра: ", 1, manager.getStudentCount());
-        manager.printStudent(index - 1);
-    }
-    
     void groupEditMenu() {
         std::string group = getStringInput("Введите группу: ");
         std::string pattern = getStringInput("Введите шаблон фамилии: ");
         
-        auto results = manager.searchByPatternAndGroup(pattern, group);
+        auto groupStudents = manager.searchByGroup(group);
+        auto patternStudents = manager.searchByLastNamePattern(pattern);
         
-        std::cout << "Найдено студентов: " << results.size() << "\n";
-        
-        if (results.empty()) {
-            std::cout << "Редактирование не требуется.\n";
-            return;
-        }
+        std::cout << "Найдено студентов в группе " << group << ": " << groupStudents.size() << "\n";
+        std::cout << "Найдено студентов по шаблону '" << pattern << "': " << patternStudents.size() << "\n";
         
         std::cout << "Введите новые данные для редактирования:\n";
         Student newData = inputStudent();
         
         manager.editByGroupAndPattern(group, pattern, newData);
-        std::cout << "Редактирование завершено! Обновлено " << results.size() << " записей.\n";
+        std::cout << "Редактирование завершено!\n";
     }
     
 public:
+    Menu() : currentSortType(0), currentSortAscending(true) {}
+    
     void run() {
         std::cout << "=== Система управления студентами ===\n";
         
         while (true) {
             std::cout << "\n=== МЕНЮ ===\n";
             std::cout << "Студентов: " << manager.getStudentCount() << "\n";
+            if (currentSortType != 0) {
+                std::cout << "Текущая сортировка: ";
+                switch (currentSortType) {
+                    case 1: std::cout << "Фамилия ▲"; break;
+                    case 2: std::cout << "Фамилия ▼"; break;
+                    case 3: std::cout << "Дата рождения " << (currentSortAscending ? "▲" : "▼"); break;
+                    case 4: std::cout << "Группа " << (currentSortAscending ? "▲" : "▼"); break;
+                }
+                std::cout << "\n";
+            }
             std::cout << "1. Добавить студента\n";
             std::cout << "2. Вставить студента\n";
             std::cout << "3. Удалить студента\n";
@@ -431,14 +362,13 @@ public:
             std::cout << "7. Сортировка студентов\n";
             std::cout << "8. Статистика\n";
             std::cout << "9. Работа с файлами\n";
-            std::cout << "10. Добавить с сохранением порядка\n";
+            std::cout << "10. Показать конкретного студента\n";
             std::cout << "11. Редактировать по группе и шаблону\n";
             std::cout << "12. Тестирование производительности\n";
             std::cout << "13. Генерация тестовых данных\n";
-            std::cout << "14. Просмотреть студента по номеру\n";
             std::cout << "0. Выход\n";
             
-            int choice = getIntInput("Выберите действие: ", 0, 14);
+            int choice = getIntInput("Выберите действие: ", 0, 13);
             
             switch (choice) {
                 case 0:
@@ -472,7 +402,7 @@ public:
                     fileMenu();
                     break;
                 case 10:
-                    addSortedMenu();
+                    searchSingleStudentMenu();
                     break;
                 case 11:
                     groupEditMenu();
@@ -484,11 +414,9 @@ public:
                     int count = getIntInput("Сколько записей сгенерировать? ", 1, 10000);
                     manager.generateTestData(count);
                     std::cout << "Сгенерировано " << count << " записей\n";
+                    currentSortType = 0; // Сброс сортировки после генерации
                     break;
                 }
-                case 14:
-                    viewStudentMenu();
-                    break;
                 default:
                     std::cout << "Неверный выбор!\n";
             }

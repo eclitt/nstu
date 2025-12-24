@@ -13,6 +13,7 @@ private:
     int day;
     int month;
     int year;
+    bool isValid;
 
     bool isValidDate(int d, int m, int y) const {
         if (y < 1900 || y > 2100) return false;
@@ -29,10 +30,10 @@ private:
     }
 
 public:
-    Date() : day(1), month(1), year(2000) {}
+    Date() : day(1), month(1), year(2000), isValid(true) {}
     
-    Date(int d, int m, int y) {
-        if (isValidDate(d, m, y)) {
+    Date(int d, int m, int y) : isValid(isValidDate(d, m, y)) {
+        if (isValid) {
             day = d;
             month = m;
             year = y;
@@ -46,13 +47,38 @@ public:
     int getDay() const { return day; }
     int getMonth() const { return month; }
     int getYear() const { return year; }
+    bool getIsValid() const { return isValid; }
     
-    void setDay(int d) { if (d >= 1 && d <= 31) day = d; }
-    void setMonth(int m) { if (m >= 1 && m <= 12) month = m; }
-    void setYear(int y) { if (y >= 1900 && y <= 2100) year = y; }
+    void setDate(int d, int m, int y) {
+        if (isValidDate(d, m, y)) {
+            day = d;
+            month = m;
+            year = y;
+            isValid = true;
+        }
+    }
     
-    // Операторы сравнения
+    void clear() {
+        day = 1;
+        month = 1;
+        year = 2000;
+        isValid = false;
+    }
+    
+    std::string toString() const {
+        if (!isValid) return "---";
+        std::ostringstream oss;
+        oss << std::setw(2) << std::setfill('0') << day << "."
+            << std::setw(2) << std::setfill('0') << month << "."
+            << year;
+        return oss.str();
+    }
+    
     bool operator<(const Date& other) const {
+        if (!isValid && other.isValid) return false;
+        if (isValid && !other.isValid) return true;
+        if (!isValid && !other.isValid) return false;
+        
         if (year != other.year) return year < other.year;
         if (month != other.month) return month < other.month;
         return day < other.day;
@@ -61,6 +87,8 @@ public:
     bool operator>(const Date& other) const { return other < *this; }
     
     bool operator==(const Date& other) const {
+        if (isValid != other.isValid) return false;
+        if (!isValid && !other.isValid) return true;
         return day == other.day && month == other.month && year == other.year;
     }
     
@@ -75,39 +103,26 @@ public:
     }
     
     friend std::ostream& operator<<(std::ostream& os, const Date& date) {
-        os << std::setw(2) << std::setfill('0') << date.day << "."
-           << std::setw(2) << std::setfill('0') << date.month << "."
-           << date.year;
+        os << date.toString();
         return os;
     }
     
-    friend std::istream& operator>>(std::istream& is, Date& date) {
-        std::string input;
-        is >> input;
-        std::istringstream iss(input);
-        char delimiter;
-        int d, m, y;
-        
-        if (iss >> d >> delimiter >> m >> delimiter >> y) {
-            if (date.isValidDate(d, m, y)) {
-                date.day = d;
-                date.month = m;
-                date.year = y;
-            }
-        }
-        return is;
-    }
-    
     void serialize(std::ostream& os) const {
-        os.write(reinterpret_cast<const char*>(&day), sizeof(day));
-        os.write(reinterpret_cast<const char*>(&month), sizeof(month));
-        os.write(reinterpret_cast<const char*>(&year), sizeof(year));
+        os.write(reinterpret_cast<const char*>(&isValid), sizeof(isValid));
+        if (isValid) {
+            os.write(reinterpret_cast<const char*>(&day), sizeof(day));
+            os.write(reinterpret_cast<const char*>(&month), sizeof(month));
+            os.write(reinterpret_cast<const char*>(&year), sizeof(year));
+        }
     }
     
     void deserialize(std::istream& is) {
-        is.read(reinterpret_cast<char*>(&day), sizeof(day));
-        is.read(reinterpret_cast<char*>(&month), sizeof(month));
-        is.read(reinterpret_cast<char*>(&year), sizeof(year));
+        is.read(reinterpret_cast<char*>(&isValid), sizeof(isValid));
+        if (isValid) {
+            is.read(reinterpret_cast<char*>(&day), sizeof(day));
+            is.read(reinterpret_cast<char*>(&month), sizeof(month));
+            is.read(reinterpret_cast<char*>(&year), sizeof(year));
+        }
     }
     
     static Date getCurrentDate() {
@@ -117,6 +132,7 @@ public:
     }
     
     int getAge() const {
+        if (!isValid) return 0;
         Date current = getCurrentDate();
         int age = current.year - year;
         if (current.month < month || (current.month == month && current.day < day)) {
@@ -138,7 +154,7 @@ private:
     
 public:
     Student() : lastName(""), birthDate(1, 1, 2000), 
-                admissionDate(1, 9, 2020), expulsionDate(30, 6, 2024),
+                admissionDate(1, 9, 2020), expulsionDate(), 
                 address(""), group("") {}
     
     Student(const std::string& ln, const Date& bd, const Date& ad, 
@@ -162,10 +178,18 @@ public:
     
     bool operator<(const Student& other) const { return lastName < other.lastName; }
     bool operator>(const Student& other) const { return lastName > other.lastName; }
+    
     bool operator==(const Student& other) const {
         return lastName == other.lastName && 
                birthDate == other.birthDate &&
+               admissionDate == other.admissionDate &&
+               expulsionDate == other.expulsionDate &&
+               address == other.address &&
                group == other.group;
+    }
+    
+    bool operator!=(const Student& other) const {
+        return !(*this == other);
     }
     
     bool compareByBirthDate(const Student& other) const { return birthDate < other.birthDate; }
@@ -222,29 +246,18 @@ public:
     }
     
     friend std::ostream& operator<<(std::ostream& os, const Student& student) {
-        os << "Фамилия: " << student.lastName << "\n"
-           << "Дата рождения: " << student.birthDate 
-           << " (возраст: " << student.birthDate.getAge() << " лет)\n"
-           << "Дата поступления: " << student.admissionDate << "\n"
-           << "Дата отчисления: " << student.expulsionDate << "\n"
-           << "Адрес: " << student.address << "\n"
-           << "Группа: " << student.group << "\n";
-        
-        Date current = Date::getCurrentDate();
-        int course = current.getYear() - student.admissionDate.getYear();
-        if (current.getMonth() < 9) course--;
-        if (course < 1) course = 1;
-        if (course > 5) course = 5;
-        
-        os << "Курс: " << course << "\n"
-           << "Статус: " << (student.isCurrentlyStudying() ? "обучается" : "отчислен") << "\n"
-           << "--------------------------------------------------\n";
+        os << student.getLastName() << " | "
+           << student.getBirthDate() << " | "
+           << student.getAdmissionDate() << " | "
+           << student.getExpulsionDate() << " | "
+           << student.getAddress() << " | "
+           << student.getGroup();
         return os;
     }
     
     bool isCurrentlyStudying() const {
         Date current = Date::getCurrentDate();
-        return current >= admissionDate && current <= expulsionDate;
+        return current >= admissionDate && (!expulsionDate.getIsValid() || current <= expulsionDate);
     }
 };
 

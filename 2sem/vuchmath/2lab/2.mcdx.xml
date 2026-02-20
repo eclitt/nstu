@@ -1,0 +1,5 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ConversionLog Date="20.02.2026 9:39:41">
+  <WorksheetData SourceVersion="14/15" Source="C:\Users\eclitt\Desktop\vuchmath\2lab\2.xmcd" Destination="C:\Users\eclitt\Desktop\vuchmath\2lab\2.mcdx" />
+  <Worksheet SourceRegionCount="67" WorksheetIssueCount="0" RegionsWithIssueCount="3"><IssueGroup Category="Расхождения в отображении" Count="3"><ConversionIssue Count="1" Text="Оператор otherwise преобразован в эквивалентное выражение с оператором if." /><ConversionIssue Count="2" Text="Отображение экспоненциального представления изменилось из исходного документа. Точность результатов при этом сохраняется." /></IssueGroup></Worksheet>
+</ConversionLog>

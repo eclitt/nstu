@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.*?>
+
+<VBox alignment="CENTER" spacing="20.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.ru.nstu._practice.HelloController">
+    <padding>
+        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+    </padding>
+
+    <Label fx:id="welcomeText" />
+    <Circle fx:id="circle" onMouseClicked="#onCircleButtonClick" fill="RED" stroke="RED"  strokeType="OUTSIDE" radius="10"/>
+    <Button onAction="#onHelloButtonClick" text="lmao)" />
+    <Button onAction="#onSecondButtonClick" text="cho)" />
+</VBox>

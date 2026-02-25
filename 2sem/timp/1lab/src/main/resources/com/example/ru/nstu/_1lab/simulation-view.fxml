@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.canvas.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox alignment="CENTER" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.ru.nstu._1lab.SimulationController">
+    <Canvas fx:id="canvas" focusTraversable="true" height="600" width="931.0" />
+    <Text text="B - запустить симуляцию E - остановить симуляцию T - Показать/скрыть время" wrappingWidth="459.0" />
+</VBox>

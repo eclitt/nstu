@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.canvas.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<SplitPane xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/17.0.12"
+           fx:controller="com.example.ru.nstu._1lab.SimulationController"
+           fx:id="splitPane">
+    <!-- Левая часть - симуляция -->
+    <VBox alignment="CENTER">
+        <Canvas fx:id="canvas" focusTraversable="true" height="600" width="500"/>
+    </VBox>
+
+    <!-- Правая часть - управление -->
+    <VBox alignment="TOP_LEFT" spacing="15" style="-fx-padding: 20;">
+        <Label text="Управление" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+
+        <Button text="Старт (B)" onAction="#startSimulationButton" prefWidth="150"/>
+        <Button text="Стоп (E)" onAction="#stopSimulationButton" prefWidth="150"/>
+        <Button text="Показать/скрыть время (T)" onAction="#toggleTimeButton" prefWidth="150"/>
+
+        <Separator/>
+
+        <Label text="Статистика" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+        <Label fx:id="timeLabel" text="Время: 0.000 сек"/>
+        <Label fx:id="developersLabel" text="Разработчиков: 0"/>
+        <Label fx:id="managersLabel" text="Менеджеров: 0"/>
+        <Label fx:id="totalLabel" text="Всего: 0"/>
+    </VBox>
+</SplitPane>

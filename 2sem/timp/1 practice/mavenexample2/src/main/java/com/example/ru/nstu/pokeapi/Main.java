@@ -10,9 +10,11 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.Charset;
-import java.util.Iterator;
 
 public class Main {
+    public static String ListUrl = "https://pokeapi.co/api/v2/pokemon/";
+    public String PokemonUrl;
+
     public static String getJson(String _url) throws IOException {
         URL url = new URL(_url);
         URLConnection conn = url.openConnection();
@@ -32,7 +34,6 @@ public class Main {
         String json = sb.toString();
         return json;
     }
-    public static String ListUrl = "https://pokeapi.co/api/v2/pokemon/";
 
     public static void main(String[] args) {
         String json = null;
@@ -45,25 +46,86 @@ public class Main {
             if (json == null) {
                 System.out.println("empty");
             } else {
-                printPokemons(json);
+                printFirst3Pokemons(json);
+                System.out.println("\n=== ALL POKEMONS ===\n");
+                printAllPokemons(json);
             }
         }
 
     }
-    public static void printPokemons(String _json){
-        ObjectMapper mapper = new ObjectMapper();
+
+    public static void printFirst3Pokemons(String _json) {
         try {
+            ObjectMapper mapper = new ObjectMapper();
             JsonNode root = mapper.readTree(_json);
-            System.out.println(root.get("count").asInt());
+            ArrayNode results = (ArrayNode) root.get("results");
 
-            ArrayNode result = (ArrayNode) root.get("results");
+            int count = Math.min(3, results.size());
 
-            for (JsonNode current : result) {
-                System.out.println(current.get("name").asText() + ": " + current.get("url").asText());
+            for (int i = 0; i < count; i++) {
+                JsonNode pokemon = results.get(i);
+                String url = pokemon.get("url").asText();
+                String pokemonJson = getJson(url);
+                printPokemonDetails(pokemonJson);
+                System.out.println("-------------------");
+            }
+        } catch (JsonProcessingException ex) {
+            ex.printStackTrace();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    public static void printPokemonDetails(String _json) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode root = mapper.readTree(_json);
+
+            String name = root.get("name").asText();
+            int height = root.get("height").asInt();
+            int weight = root.get("weight").asInt();
+
+            System.out.println("Name: " + name);
+            System.out.println("Height: " + height);
+            System.out.println("Weight: " + weight);
+
+            // Types
+            System.out.print("Types: ");
+            ArrayNode types = (ArrayNode) root.get("types");
+            for (JsonNode type : types) {
+                System.out.print(type.get("type").get("name").asText() + " ");
+            }
+            System.out.println();
+
+            // Stats
+            System.out.println("Stats:");
+            ArrayNode stats = (ArrayNode) root.get("stats");
+            for (JsonNode stat : stats) {
+                String statName = stat.get("stat").get("name").asText();
+                int baseStat = stat.get("base_stat").asInt();
+                System.out.println("  " + statName + ": " + baseStat);
+            }
+
+        } catch (JsonProcessingException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    public static void printAllPokemons(String _json) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode root = mapper.readTree(_json);
+            ArrayNode results = (ArrayNode) root.get("results");
+
+            for (JsonNode pokemon : results) {
+                String name = pokemon.get("name").asText();
+                String url = pokemon.get("url").asText();
+                System.out.println(name + " - " + url);
             }
         } catch (JsonProcessingException ex) {
             ex.printStackTrace();
         }
     }
+
 }
 

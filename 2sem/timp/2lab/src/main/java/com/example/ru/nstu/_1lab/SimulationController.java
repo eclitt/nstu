@@ -2,14 +2,20 @@ package com.example.ru.nstu._1lab;
 
 import javafx.animation.AnimationTimer;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.Label;
-import javafx.scene.control.SplitPane;
+import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 
 /**
  * Контроллер для симуляции компании.
@@ -38,6 +44,26 @@ public class SimulationController {
     @FXML
     private Label totalLabel;
 
+    @FXML
+    private Button startbtn;
+
+    @FXML
+    private Button stopbtn;
+
+    @FXML
+    private CheckBox timeon;
+
+    @FXML
+    private CheckBox timeoff;
+
+    // Элементы меню
+    @FXML
+    private CheckMenuItem menuTimeOn;
+
+    @FXML
+    private CheckMenuItem menuTimeOff;
+
+
     private Habitat habitat;
     private AnimationTimer timer;
     private boolean showTime = true;
@@ -53,18 +79,35 @@ public class SimulationController {
         // Настройка пропорций SplitPane (60% слева, 40% справа)
         splitPane.setDividerPositions(0.6);
 
-        // Инициализация среды с параметрами из задания
-        habitat = new Habitat(canvas.getWidth(), canvas.getHeight(), 2, 3, 0.7, 50);
+        // Инициализация среды будет выполнена при старте симуляции
+        // для получения корректных размеров Canvas после рендеринга
+        habitat = null;
+        // Кнопки правой панели
+        startbtn.setDisable(false);
+        stopbtn.setDisable(true);
+        timeon.setSelected(true);
+        timeoff.setSelected(false);
+        // Элементы меню
+        menuTimeOn.setSelected(true);
+        menuTimeOff.setSelected(false);
 
         // Обработчик нажатий клавиш
         canvas.setOnKeyPressed(event -> {
             KeyCode code = event.getCode();
             if (code == KeyCode.B) {
                 startSimulation();
+                startbtn.setDisable(true);
+                stopbtn.setDisable(false);
             } else if (code == KeyCode.E) {
                 stopSimulation();
+                startbtn.setDisable(false);
+                stopbtn.setDisable(true);
             } else if (code == KeyCode.T) {
-                toggleTime();
+                if (showTime) { showTime = false; timeon.setSelected(false); timeoff.setSelected(true);}
+                else { showTime = true; timeon.setSelected(true); timeoff.setSelected(false);}
+
+            } else if (code == KeyCode.I) {
+                showInfoDialog();
             }
         });
 
@@ -76,32 +119,116 @@ public class SimulationController {
                 updateStatistics();
             }
         };
-
-        timer.start();
     }
 
     // Методы для кнопок в правой панели
     @FXML
     private void startSimulationButton() {
         startSimulation();
+        // Синхронизация состояния кнопок
+        startbtn.setDisable(true);
+        stopbtn.setDisable(false);
+        canvas.requestFocus();
     }
 
     @FXML
     private void stopSimulationButton() {
         stopSimulation();
+        // Синхронизация состояния кнопок
+        stopbtn.setDisable(true);
+        startbtn.setDisable(false);
+        canvas.requestFocus();
     }
 
     @FXML
-    private void toggleTimeButton() {
-        toggleTime();
+    private void chkShowTime() {
+        onTime();
+        timeon.setSelected(true);
+        menuTimeOn.setSelected(true);
+        timeoff.setSelected(false);
+        menuTimeOff.setSelected(false);
+        // Принудительная перерисовка
+        updateAndRender();
+        canvas.requestFocus();
+    }
+
+    @FXML
+    private void chkHideTime() {
+        offTime();
+        timeoff.setSelected(true);
+        menuTimeOff.setSelected(true);
+        timeon.setSelected(false);
+        menuTimeOn.setSelected(false);
+        // Принудительная перерисовка
+        updateAndRender();
+        canvas.requestFocus();
+    }
+
+    @FXML
+    private void exitApplication() {
+        Stage stage = (Stage) canvas.getScene().getWindow();
+        stage.close();
+    }
+
+    @FXML
+    private void showAboutDialog() {
+        Stage dialogStage = new Stage();
+        dialogStage.setTitle("О программе");
+        dialogStage.initModality(Modality.WINDOW_MODAL);
+        dialogStage.initOwner(canvas.getScene().getWindow());
+
+        VBox vbox = new VBox(15);
+        vbox.setPadding(new Insets(20));
+        vbox.setStyle("-fx-background-color: white;");
+
+        Label titleLabel = new Label("Симуляция компании");
+        titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 18));
+        titleLabel.setTextFill(Color.DARKBLUE);
+
+        Label versionLabel = new Label("Версия 1.0");
+        versionLabel.setFont(Font.font("Arial", FontWeight.NORMAL, 14));
+
+        Label descriptionLabel = new Label("Лабораторная работа №2 по ТИМП");
+        descriptionLabel.setFont(Font.font("Arial", FontWeight.NORMAL, 12));
+        descriptionLabel.setTextFill(Color.GRAY);
+
+        Button closeBtn = new Button("Закрыть");
+        closeBtn.setPrefWidth(100);
+        closeBtn.setOnAction(e -> dialogStage.close());
+
+        HBox buttonBox = new HBox(closeBtn);
+        buttonBox.setAlignment(Pos.CENTER);
+
+        vbox.getChildren().addAll(titleLabel, versionLabel, descriptionLabel, new Separator(), buttonBox);
+
+        Scene scene = new Scene(vbox);
+        dialogStage.setScene(scene);
+        dialogStage.setResizable(false);
+        dialogStage.showAndWait();
+    }
+
+    @FXML
+    private void showInfoButton() {
+        showInfoDialog();
+        canvas.requestFocus();
     }
 
     private void startSimulation() {
+        if (habitat == null) {
+            // Инициализируем среду с актуальными размерами Canvas (Singleton)
+            habitat = Habitat.getInstance(canvas.getWidth(), canvas.getHeight(), 2, 3, 0.7, 50);
+        } else if (!habitat.isRunning()) {
+            // Сбрасываем Singleton при новом запуске после остановки
+            Habitat.resetInstance();
+            habitat = Habitat.getInstance(canvas.getWidth(), canvas.getHeight(), 2, 3, 0.7, 50);
+        }
         if (!habitat.isRunning()) {
+            Employee.resetCounter();
             habitat.start();
             simulationEnded = false;
             totalDevelopers = 0;
             totalManagers = 0;
+            timer.start();
         }
     }
 
@@ -114,11 +241,79 @@ public class SimulationController {
 
             habitat.stop();
             simulationEnded = true;
+            timer.stop();
+            // Принудительная перерисовка для отображения статистики
+            updateAndRender();
         }
     }
 
-    private void toggleTime() {
-        showTime = !showTime;
+    private void offTime() {
+        showTime = false;
+    }
+    private void onTime() {
+        showTime = true;
+    }
+
+
+    /**
+     * Показывает модальное окно с информацией о симуляции.
+     */
+    private void showInfoDialog() {
+        // Получаем актуальные значения
+        int devs = habitat != null ? habitat.getDeveloperCount() : 0;
+        int mgrs = habitat != null ? habitat.getManagerCount() : 0;
+        long time = habitat != null ? habitat.getElapsedTime() : finalTime;
+
+        if (simulationEnded) {
+            devs = totalDevelopers;
+            mgrs = totalManagers;
+            time = finalTime;
+        }
+
+        // Создаём модальное окно
+        Stage dialogStage = new Stage();
+        dialogStage.setTitle("Информация о симуляции");
+        dialogStage.initModality(Modality.WINDOW_MODAL);
+        dialogStage.initOwner(canvas.getScene().getWindow());
+
+        VBox vbox = new VBox(15);
+        vbox.setPadding(new Insets(20));
+        vbox.setStyle("-fx-background-color: white;");
+
+        Label titleLabel = new Label("Статистика симуляции");
+        titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 18));
+        titleLabel.setTextFill(Color.DARKBLUE);
+
+        Label devLabel = new Label("Разработчиков: " + devs);
+        devLabel.setFont(Font.font("Arial", FontWeight.NORMAL, 14));
+        devLabel.setTextFill(Color.BLUE);
+
+        Label mgrLabel = new Label("Менеджеров: " + mgrs);
+        mgrLabel.setFont(Font.font("Arial", FontWeight.NORMAL, 14));
+        mgrLabel.setTextFill(Color.RED);
+
+        Label totalLabelInfo = new Label("Всего объектов: " + (devs + mgrs));
+        totalLabelInfo.setFont(Font.font("Arial", FontWeight.NORMAL, 14));
+
+        long seconds = time / 1000;
+        long millis = time % 1000;
+        Label timeLabelInfo = new Label(String.format("Время симуляции: %d.%03d сек", seconds, millis));
+        timeLabelInfo.setFont(Font.font("Arial", FontWeight.BOLD, 14));
+        timeLabelInfo.setTextFill(Color.DARKGREEN);
+
+        Button closeBtn = new Button("Закрыть");
+        closeBtn.setPrefWidth(100);
+        closeBtn.setOnAction(e -> dialogStage.close());
+
+        HBox buttonBox = new HBox(closeBtn);
+        buttonBox.setAlignment(Pos.CENTER);
+
+        vbox.getChildren().addAll(titleLabel, devLabel, mgrLabel, totalLabelInfo, new Separator(), buttonBox);
+
+        Scene scene = new Scene(vbox);
+        dialogStage.setScene(scene);
+        dialogStage.setResizable(false);
+        dialogStage.showAndWait();
     }
 
     /**

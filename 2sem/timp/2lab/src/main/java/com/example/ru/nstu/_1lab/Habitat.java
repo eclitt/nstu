@@ -4,47 +4,68 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-/**
- * Класс среды обитания объектов (компании).
- * Хранит список сотрудников, управляет их генерацией и обновлением.
- */
 public class Habitat {
-    private List<Employee> employees = new ArrayList<>();
+    private static Habitat instance;
     
+    private List<Employee> employees = new ArrayList<>();
+
     // Параметры симуляции
     private int n1 = 2;           // интервал генерации разработчика (сек)
     private int n2 = 3;           // интервал генерации менеджера (сек)
     private double p1 = 0.7;      // вероятность появления разработчика
     private int kPercent = 50;    // максимальный процент менеджеров от разработчиков
-    
+
     // Размеры рабочей области
     private double width;
     private double height;
-    
+
     // Состояние симуляции
     private long startTime = 0;
+    private long elapsedTime = 0;
     private long lastDeveloperTime = 0;
     private long lastManagerTime = 0;
     private boolean isRunning = false;
-    
+
     private Random random = new Random();
-    
+
     // Счётчики
     private int developerCount = 0;
     private int managerCount = 0;
 
-    public Habitat(double width, double height) {
-        this.width = width;
-        this.height = height;
+    /**
+     * Приватный конструктор для предотвращения создания экземпляров извне.
+     */
+    private Habitat() {
     }
 
-    public Habitat(double width, double height, int n1, int n2, double p1, int kPercent) {
-        this.width = width;
-        this.height = height;
-        this.n1 = n1;
-        this.n2 = n2;
-        this.p1 = p1;
-        this.kPercent = kPercent;
+    /**
+     * Возвращает единственный экземпляр Habitat (Singleton).
+     * @param width ширина рабочей области
+     * @param height высота рабочей области
+     * @param n1 интервал генерации разработчика (сек)
+     * @param n2 интервал генерации менеджера (сек)
+     * @param p1 вероятность появления разработчика
+     * @param kPercent максимальный процент менеджеров от разработчиков
+     * @return экземпляр Habitat
+     */
+    public static synchronized Habitat getInstance(double width, double height, int n1, int n2, double p1, int kPercent) {
+        if (instance == null) {
+            instance = new Habitat();
+        }
+        instance.width = width;
+        instance.height = height;
+        instance.n1 = n1;
+        instance.n2 = n2;
+        instance.p1 = p1;
+        instance.kPercent = kPercent;
+        return instance;
+    }
+
+    /**
+     * Сбрасывает экземпляр Singleton. Вызывается при полном перезапуске симуляции.
+     */
+    public static synchronized void resetInstance() {
+        instance = null;
     }
 
     /**
@@ -118,16 +139,23 @@ public class Habitat {
     public synchronized void start() {
         isRunning = true;
         startTime = System.currentTimeMillis();
+        elapsedTime = 0;
         lastDeveloperTime = 0;
         lastManagerTime = 0;
+        developerCount = 0;
+        managerCount = 0;
+        employees.clear();
     }
 
     /**
      * Останавливает симуляцию и очищает список объектов.
      */
     public synchronized void stop() {
-        isRunning = false;
-        employees.clear();
+        if (isRunning) {
+            elapsedTime = System.currentTimeMillis() - startTime;
+            isRunning = false;
+            employees.clear();
+        }
     }
 
     /**
@@ -141,8 +169,8 @@ public class Habitat {
      * Возвращает время симуляции в миллисекундах.
      */
     public long getElapsedTime() {
-        if (!isRunning && startTime == 0) {
-            return 0;
+        if (!isRunning) {
+            return elapsedTime;
         }
         return System.currentTimeMillis() - startTime;
     }

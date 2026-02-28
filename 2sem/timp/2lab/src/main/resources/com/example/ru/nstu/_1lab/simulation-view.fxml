@@ -4,9 +4,30 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<SplitPane xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/17.0.12"
-           fx:controller="com.example.ru.nstu._1lab.SimulationController"
-           fx:id="splitPane">
+<VBox xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/17.0.12"
+      fx:controller="com.example.ru.nstu._1lab.SimulationController">
+    
+    <!-- Главное меню в стиле классических приложений Windows -->
+    <MenuBar>
+        <Menu text="Файл">
+            <MenuItem text="Выход" onAction="#exitApplication" accelerator="ALT+F4"/>
+        </Menu>
+        <Menu text="Симуляция">
+            <MenuItem text="Старт" onAction="#startSimulationButton" accelerator="B"/>
+            <MenuItem text="Стоп" onAction="#stopSimulationButton" accelerator="E"/>
+            <SeparatorMenuItem/>
+            <MenuItem text="Информация" onAction="#showInfoButton" accelerator="I"/>
+        </Menu>
+        <Menu text="Вид">
+            <CheckMenuItem text="Показать время" fx:id="menuTimeOn" onAction="#chkShowTime"/>
+            <CheckMenuItem text="Скрыть время" fx:id="menuTimeOff" onAction="#chkHideTime"/>
+        </Menu>
+        <Menu text="Справка">
+            <MenuItem text="О программе" onAction="#showAboutDialog"/>
+        </Menu>
+    </MenuBar>
+    
+    <SplitPane fx:id="splitPane" VBox.vgrow="ALWAYS">
     <!-- Левая часть - симуляция -->
     <VBox alignment="CENTER">
         <Canvas fx:id="canvas" focusTraversable="true" height="600" width="500"/>
@@ -16,9 +37,11 @@
     <VBox alignment="TOP_LEFT" spacing="15" style="-fx-padding: 20;">
         <Label text="Управление" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
 
-        <Button text="Старт (B)" onAction="#startSimulationButton" prefWidth="150"/>
-        <Button text="Стоп (E)" onAction="#stopSimulationButton" prefWidth="150"/>
-        <Button text="Показать/скрыть время (T)" onAction="#toggleTimeButton" prefWidth="150"/>
+        <Button fx:id="startbtn" text="Старт (B)" onAction="#startSimulationButton" prefWidth="150"/>
+        <Button fx:id="stopbtn" text="Стоп (E)" onAction="#stopSimulationButton" prefWidth="150"/>
+        <Button text="Информация (I)" onAction="#showInfoButton" prefWidth="150"/>
+        <CheckBox fx:id="timeon" text="Показать время" onAction="#chkShowTime" prefWidth="150"/>
+        <CheckBox fx:id="timeoff" text="Скрыть время" onAction="#chkHideTime" prefWidth="150"/>
 
         <Separator/>
 
@@ -28,4 +51,5 @@
         <Label fx:id="managersLabel" text="Менеджеров: 0"/>
         <Label fx:id="totalLabel" text="Всего: 0"/>
     </VBox>
-</SplitPane>
+    </SplitPane>
+</VBox>

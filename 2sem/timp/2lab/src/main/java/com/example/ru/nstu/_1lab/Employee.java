@@ -62,6 +62,13 @@ public abstract class Employee implements IBehaviour {
     }
 
     /**
+     * Сбрасывает счётчик ID. Вызывается при перезапуске симуляции.
+     */
+    public static void resetCounter() {
+        counter = 0;
+    }
+
+    /**
      * Возвращает тип сотрудника в виде строки.
      * @return название типа (Developer, Manager)
      */

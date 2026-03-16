@@ -6,10 +6,13 @@
 
 <VBox xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/17.0.12"
       fx:controller="com.example.ru.nstu._1lab.SimulationController">
-    
-    <!-- Главное меню в стиле классических приложений Windows -->
+
+    <!-- Главное меню -->
     <MenuBar>
         <Menu text="Файл">
+            <MenuItem text="Старт" onAction="#startSimulationButton" accelerator="B"/>
+            <MenuItem text="Стоп" onAction="#stopSimulationButton" accelerator="E"/>
+            <SeparatorMenuItem/>
             <MenuItem text="Выход" onAction="#exitApplication" accelerator="ALT+F4"/>
         </Menu>
         <Menu text="Симуляция">
@@ -21,35 +24,100 @@
         <Menu text="Вид">
             <CheckMenuItem text="Показать время" fx:id="menuTimeOn" onAction="#chkShowTime"/>
             <CheckMenuItem text="Скрыть время" fx:id="menuTimeOff" onAction="#chkHideTime"/>
+            <SeparatorMenuItem/>
+            <CheckMenuItem text="Показывать информацию" fx:id="menuShowInfo" onAction="#chkShowInfo"/>
         </Menu>
         <Menu text="Справка">
             <MenuItem text="О программе" onAction="#showAboutDialog"/>
         </Menu>
     </MenuBar>
-    
-    <SplitPane fx:id="splitPane" VBox.vgrow="ALWAYS">
-    <!-- Левая часть - симуляция -->
-    <VBox alignment="CENTER">
-        <Canvas fx:id="canvas" focusTraversable="true" height="600" width="500"/>
-    </VBox>
 
-    <!-- Правая часть - управление -->
-    <VBox alignment="TOP_LEFT" spacing="15" style="-fx-padding: 20;">
-        <Label text="Управление" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
-
-        <Button fx:id="startbtn" text="Старт (B)" onAction="#startSimulationButton" prefWidth="150"/>
-        <Button fx:id="stopbtn" text="Стоп (E)" onAction="#stopSimulationButton" prefWidth="150"/>
-        <Button text="Информация (I)" onAction="#showInfoButton" prefWidth="150"/>
-        <CheckBox fx:id="timeon" text="Показать время" onAction="#chkShowTime" prefWidth="150"/>
-        <CheckBox fx:id="timeoff" text="Скрыть время" onAction="#chkHideTime" prefWidth="150"/>
-
+    <!-- Панель инструментов -->
+    <ToolBar>
+        <Button text="Старт" onAction="#startSimulationButton"/>
+        <Button text="Стоп" onAction="#stopSimulationButton"/>
         <Separator/>
+        <Label text="Периоды:"/>
+        <TextField fx:id="n1Field" prefWidth="40" text="2"/>
+        <Label text="сек (Dev)"/>
+        <TextField fx:id="n2Field" prefWidth="40" text="3"/>
+        <Label text="сек (Mgr)"/>
+        <Separator/>
+        <Label text="Вероятность:"/>
+        <ComboBox fx:id="probabilityComboBox" prefWidth="80"/>
+        <Separator/>
+        <Button text="Информация" onAction="#showInfoButton"/>
+    </ToolBar>
 
-        <Label text="Статистика" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
-        <Label fx:id="timeLabel" text="Время: 0.000 сек"/>
-        <Label fx:id="developersLabel" text="Разработчиков: 0"/>
-        <Label fx:id="managersLabel" text="Менеджеров: 0"/>
-        <Label fx:id="totalLabel" text="Всего: 0"/>
-    </VBox>
+    <SplitPane fx:id="splitPane" VBox.vgrow="ALWAYS">
+        <!-- Левая часть - симуляция -->
+        <VBox alignment="CENTER">
+            <Canvas fx:id="canvas" focusTraversable="true" height="600" width="500"/>
+        </VBox>
+
+        <!-- Правая часть - управление -->
+        <ScrollPane fitToWidth="true">
+            <VBox alignment="TOP_LEFT" spacing="15" style="-fx-padding: 15;">
+                
+                <!-- Параметры симуляции -->
+                <TitledPane text="Параметры симуляции" expanded="true">
+                    <VBox spacing="10" style="-fx-padding: 10;">
+                        <Label text="Периоды рождения объектов" style="-fx-font-weight: bold;"/>
+                        
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <Label text="Разработчики (n1):"/>
+                            <TextField fx:id="n1FieldRight" prefWidth="60" text="2"/>
+                            <Label text="сек"/>
+                        </HBox>
+                        
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <Label text="Менеджеры (n2):"/>
+                            <TextField fx:id="n2FieldRight" prefWidth="60" text="3"/>
+                            <Label text="сек"/>
+                        </HBox>
+                        
+                        <Separator/>
+                        
+                        <Label text="Вероятность рождения разработчика" style="-fx-font-weight: bold;"/>
+                        
+                        <Label text="ComboBox (шаг 10%):"/>
+                        <ComboBox fx:id="probabilityComboBoxRight" prefWidth="150"/>
+                        
+                        <Label text="Список (шаг 10%):"/>
+                        <ListView fx:id="probabilityListView" prefHeight="150"/>
+                    </VBox>
+                </TitledPane>
+                
+                <!-- Управление -->
+                <TitledPane text="Управление" expanded="true">
+                    <VBox spacing="10" style="-fx-padding: 10;">
+                        <Button fx:id="startbtn" text="Старт (B)" onAction="#startSimulationButton" prefWidth="150"/>
+                        <Button fx:id="stopbtn" text="Стоп (E)" onAction="#stopSimulationButton" prefWidth="150"/>
+                        <Button text="Информация (I)" onAction="#showInfoButton" prefWidth="150"/>
+                        
+                        <Separator/>
+                        
+                        <CheckBox fx:id="showInfoCheckBox" text="Показывать информацию" selected="true"/>
+                        
+                        <Separator/>
+                        
+                        <Label text="Отображение времени:"/>
+                        <CheckBox fx:id="timeon" text="Показать время" selected="true" onAction="#chkShowTime"/>
+                        <CheckBox fx:id="timeoff" text="Скрыть время" onAction="#chkHideTime"/>
+                    </VBox>
+                </TitledPane>
+                
+                <!-- Статистика -->
+                <TitledPane text="Статистика" expanded="true">
+                    <VBox spacing="5" style="-fx-padding: 10;">
+                        <Label fx:id="timeLabel" text="Время: 0.000 сек"/>
+                        <Label fx:id="developersLabel" text="Разработчиков: 0"/>
+                        <Label fx:id="managersLabel" text="Менеджеров: 0"/>
+                        <Label fx:id="totalLabel" text="Всего: 0"/>
+                    </VBox>
+                </TitledPane>
+                
+            </VBox>
+        </ScrollPane>
     </SplitPane>
 </VBox>

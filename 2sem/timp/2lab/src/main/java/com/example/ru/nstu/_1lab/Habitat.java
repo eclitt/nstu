@@ -6,7 +6,7 @@ import java.util.Random;
 
 public class Habitat {
     private static Habitat instance;
-    
+
     private List<Employee> employees = new ArrayList<>();
 
     // Параметры симуляции
@@ -62,10 +62,36 @@ public class Habitat {
     }
 
     /**
+     * Возвращает единственный экземпляр Habitat (Singleton) без параметров.
+     * Используется для получения доступа к существующему экземпляру.
+     * @return экземпляр Habitat
+     */
+    public static synchronized Habitat getInstance() {
+        if (instance == null) {
+            instance = new Habitat();
+        }
+        return instance;
+    }
+
+    /**
      * Сбрасывает экземпляр Singleton. Вызывается при полном перезапуске симуляции.
      */
     public static synchronized void resetInstance() {
         instance = null;
+    }
+
+    /**
+     * Применяет новые параметры симуляции.
+     * @param n1 интервал генерации разработчика (сек)
+     * @param n2 интервал генерации менеджера (сек)
+     * @param p1 вероятность появления разработчика
+     * @param kPercent максимальный процент менеджеров от разработчиков
+     */
+    public synchronized void applySettings(int n1, int n2, double p1, int kPercent) {
+        this.n1 = n1;
+        this.n2 = n2;
+        this.p1 = p1;
+        this.kPercent = kPercent;
     }
 
     /**

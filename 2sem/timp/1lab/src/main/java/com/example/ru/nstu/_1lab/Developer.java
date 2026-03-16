@@ -2,10 +2,7 @@ package com.example.ru.nstu._1lab;
 
 import javafx.scene.paint.Color;
 
-/**
- * Класс разработчика.
- * Визуализируется синим цветом в виде прямоугольника с "кодом".
- */
+
 public class Developer extends Employee {
     
     public Developer() {
@@ -22,7 +19,7 @@ public class Developer extends Employee {
 
     @Override
     public void update(long elapsedTime) {
-        // Разработчик "пишет код" - небольшая анимация пульсации
-        // В данной реализации просто остаётся на месте
+        // мб анимация
+
     }
 }

@@ -2,10 +2,7 @@ package com.example.ru.nstu._1lab;
 
 import javafx.scene.paint.Color;
 
-/**
- * Абстрактный класс сотрудника компании.
- * Содержит базовые свойства для визуализации и позиционирования объекта.
- */
+
 public abstract class Employee implements IBehaviour {
     private static int counter = 0;
     protected int id;
@@ -19,7 +16,6 @@ public abstract class Employee implements IBehaviour {
     
     // Цвет для визуализации
     protected Color color;
-
     public Employee() {
         this.id = ++counter;
         this.creationTime = System.currentTimeMillis();

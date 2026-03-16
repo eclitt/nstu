@@ -9,13 +9,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 
-/**
- * Контроллер для симуляции компании.
- * Управление:
- * - B - запустить симуляцию
- * - E - остановить симуляцию
- * - T - показать/скрыть время
- */
 public class SimulationController {
 
     @FXML
@@ -149,14 +142,12 @@ public class SimulationController {
         gc.setFont(Font.font("Arial", FontWeight.BOLD, 12));
         
         if (employee instanceof Developer) {
-            // Разработчик - символ кода "</>"
             gc.fillText("</>", x + 8, y + 25);
         } else if (employee instanceof Manager) {
-            // Менеджер - символ документа
             gc.fillText("M", x + 15, y + 25);
         }
 
-        // ID сотрудника (мелким шрифтом)
+        // ID сотрудника
         gc.setFont(Font.font("Arial", FontWeight.NORMAL, 8));
         gc.setFill(Color.WHITE);
         gc.fillText("#" + employee.getId(), x + 2, y + 12);

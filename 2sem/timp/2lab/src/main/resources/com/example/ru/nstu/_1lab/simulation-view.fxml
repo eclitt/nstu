@@ -10,20 +10,20 @@
     <!-- Главное меню -->
     <MenuBar>
         <Menu text="Файл">
-            <MenuItem text="Старт" onAction="#startSimulationButton" accelerator="B"/>
-            <MenuItem text="Стоп" onAction="#stopSimulationButton" accelerator="E"/>
+            <MenuItem text="Старт" onAction="#startSimulationButton"/>
+            <MenuItem text="Стоп" onAction="#stopSimulationButton"/>
             <SeparatorMenuItem/>
             <MenuItem text="Выход" onAction="#exitApplication" accelerator="ALT+F4"/>
         </Menu>
         <Menu text="Симуляция">
-            <MenuItem text="Старт" onAction="#startSimulationButton" accelerator="B"/>
-            <MenuItem text="Стоп" onAction="#stopSimulationButton" accelerator="E"/>
+            <MenuItem text="Старт" onAction="#startSimulationButton"/>
+            <MenuItem text="Стоп" onAction="#stopSimulationButton"/>
             <SeparatorMenuItem/>
-            <MenuItem text="Информация" onAction="#showInfoButton" accelerator="I"/>
+            <MenuItem text="Информация" onAction="#showInfoButton"/>
         </Menu>
         <Menu text="Вид">
-            <CheckMenuItem text="Показать время" fx:id="menuTimeOn" onAction="#chkShowTime"/>
-            <CheckMenuItem text="Скрыть время" fx:id="menuTimeOff" onAction="#chkHideTime"/>
+            <CheckMenuItem text="Показать время" fx:id="menuTimeOn"/>
+            <CheckMenuItem text="Скрыть время" fx:id="menuTimeOff"/>
             <SeparatorMenuItem/>
             <CheckMenuItem text="Показывать информацию" fx:id="menuShowInfo" onAction="#chkShowInfo"/>
         </Menu>
@@ -31,23 +31,6 @@
             <MenuItem text="О программе" onAction="#showAboutDialog"/>
         </Menu>
     </MenuBar>
-
-    <!-- Панель инструментов -->
-    <ToolBar>
-        <Button text="Старт" onAction="#startSimulationButton"/>
-        <Button text="Стоп" onAction="#stopSimulationButton"/>
-        <Separator/>
-        <Label text="Периоды:"/>
-        <TextField fx:id="n1Field" prefWidth="40" text="2"/>
-        <Label text="сек (Dev)"/>
-        <TextField fx:id="n2Field" prefWidth="40" text="3"/>
-        <Label text="сек (Mgr)"/>
-        <Separator/>
-        <Label text="Вероятность:"/>
-        <ComboBox fx:id="probabilityComboBox" prefWidth="80"/>
-        <Separator/>
-        <Button text="Информация" onAction="#showInfoButton"/>
-    </ToolBar>
 
     <SplitPane fx:id="splitPane" VBox.vgrow="ALWAYS">
         <!-- Левая часть - симуляция -->
@@ -102,8 +85,8 @@
                         <Separator/>
                         
                         <Label text="Отображение времени:"/>
-                        <CheckBox fx:id="timeon" text="Показать время" selected="true" onAction="#chkShowTime"/>
-                        <CheckBox fx:id="timeoff" text="Скрыть время" onAction="#chkHideTime"/>
+                        <RadioButton fx:id="timeon" text="Показать время" selected="true"/>
+                        <RadioButton fx:id="timeoff" text="Скрыть время"/>
                     </VBox>
                 </TitledPane>
                 

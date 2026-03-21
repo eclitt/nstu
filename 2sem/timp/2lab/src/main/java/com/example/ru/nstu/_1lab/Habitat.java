@@ -22,6 +22,7 @@ public class Habitat {
     // Состояние симуляции
     private long startTime = 0;
     private long elapsedTime = 0;
+    private long pauseTime = 0;
     private long lastDeveloperTime = 0;
     private long lastManagerTime = 0;
     private boolean isRunning = false;
@@ -181,6 +182,28 @@ public class Habitat {
             elapsedTime = System.currentTimeMillis() - startTime;
             isRunning = false;
             employees.clear();
+        }
+    }
+
+    /**
+     * Приостанавливает симуляцию без очистки данных.
+     * Может быть возобновлена через resume().
+     */
+    public synchronized void pause() {
+        if (isRunning) {
+            pauseTime = System.currentTimeMillis() - startTime;
+            isRunning = false;
+            // employees.clear() НЕ вызываем — сохраняем сотрудников
+        }
+    }
+
+    /**
+     * Возобновляет симуляцию после паузы.
+     */
+    public synchronized void resume() {
+        if (!isRunning) {
+            startTime = System.currentTimeMillis() - pauseTime;
+            isRunning = true;
         }
     }
 

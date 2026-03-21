@@ -16,17 +16,8 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-
-import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Контроллер для симуляции компании.
- * Управление:
- * - B - запустить симуляцию
- * - E - остановить симуляцию
- * - T - показать/скрыть время
- */
 public class SimulationController {
 
     @FXML
@@ -54,28 +45,19 @@ public class SimulationController {
     private Button stopbtn;
 
     @FXML
-    private CheckBox timeon;
+    private RadioButton timeon;
 
     @FXML
-    private CheckBox timeoff;
+    private RadioButton timeoff;
 
     @FXML
     private CheckBox showInfoCheckBox;
-
-    @FXML
-    private TextField n1Field;
-
-    @FXML
-    private TextField n2Field;
 
     @FXML
     private TextField n1FieldRight;
 
     @FXML
     private TextField n2FieldRight;
-
-    @FXML
-    private ComboBox<String> probabilityComboBox;
 
     @FXML
     private ComboBox<String> probabilityComboBoxRight;
@@ -100,7 +82,7 @@ public class SimulationController {
     private boolean showInfoDialog = true;
     private boolean simulationEnded = false;
     private boolean waitForOkCancel = false;
-
+    ToggleGroup toggleGroup = new ToggleGroup();
     // Параметры для статистики
     private int totalDevelopers = 0;
     private int totalManagers = 0;
@@ -129,28 +111,54 @@ public class SimulationController {
         // Кнопки правой панели
         startbtn.setDisable(false);
         stopbtn.setDisable(true);
+
+        // Группа для переключателей времени
+
+        timeon.setToggleGroup(toggleGroup);
+        timeoff.setToggleGroup(toggleGroup);
         timeon.setSelected(true);
-        timeoff.setSelected(false);
+
+        toggleGroup.selectedToggleProperty().addListener((obs, old, newVal) -> {
+            boolean newShowTime = (newVal == timeon);
+            if (this.showTime != newShowTime) {
+                this.showTime = newShowTime;
+                updateAndRender();
+                canvas.requestFocus();
+            }
+        });
+
+
+
+
+
         showInfoCheckBox.setSelected(true);
-        
+
         // Элементы меню
         menuTimeOn.setSelected(true);
         menuTimeOff.setSelected(false);
         menuShowInfo.setSelected(true);
 
-        // Обработчик нажатий клавиш
-        canvas.setOnKeyPressed(event -> {
-            KeyCode code = event.getCode();
-            if (code == KeyCode.B) {
-                startSimulation();
-                startbtn.setDisable(true);
-                stopbtn.setDisable(false);
-            } else if (code == KeyCode.E) {
-                stopSimulationWithDialog();
-            } else if (code == KeyCode.T) {
-                toggleTimeDisplay();
-            } else if (code == KeyCode.I) {
-                showInfoDialog();
+        // Глобальный обработчик клавиш на сцене (работает независимо от фокуса)
+        canvas.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (newScene != null) {
+                newScene.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, event -> {
+                    KeyCode code = event.getCode();
+                    if (code == KeyCode.B) {
+                        startSimulation();
+                        startbtn.setDisable(true);
+                        stopbtn.setDisable(false);
+                        event.consume();
+                    } else if (code == KeyCode.E) {
+                        stopSimulationWithDialog();
+                        event.consume();
+                    } else if (code == KeyCode.T) {
+                        toggleTimeDisplay();
+                        event.consume();
+                    } else if (code == KeyCode.I) {
+                        showInfoDialog();
+                        event.consume();
+                    }
+                });
             }
         });
 
@@ -168,24 +176,12 @@ public class SimulationController {
      * Инициализация ComboBox и ListView для выбора вероятности
      */
     private void initializeProbabilityControls() {
-        // Заполнение ComboBox
-        probabilityComboBox.getItems().addAll(probabilityStrings);
-        probabilityComboBox.setValue("70%");
-        probabilityComboBox.setOnAction(e -> {
-            int index = probabilityComboBox.getSelectionModel().getSelectedIndex();
-            if (index >= 0 && index < probabilityListView.getItems().size()) {
-                probabilityListView.getSelectionModel().select(index);
-            }
-            probabilityComboBoxRight.setValue(probabilityComboBox.getValue());
-        });
-
         // Заполнение ComboBoxRight
         probabilityComboBoxRight.getItems().addAll(probabilityStrings);
         probabilityComboBoxRight.setValue("70%");
         probabilityComboBoxRight.setOnAction(e -> {
             int index = probabilityComboBoxRight.getSelectionModel().getSelectedIndex();
-            if (index >= 0) {
-                probabilityComboBox.setValue(probabilityStrings.get(index));
+            if (index >= 0 && index < probabilityListView.getItems().size()) {
                 probabilityListView.getSelectionModel().select(index);
             }
         });
@@ -197,7 +193,6 @@ public class SimulationController {
             if (newVal != null) {
                 int index = probabilityStrings.indexOf(newVal);
                 if (index >= 0) {
-                    probabilityComboBox.setValue(newVal);
                     probabilityComboBoxRight.setValue(newVal);
                 }
             }
@@ -245,9 +240,6 @@ public class SimulationController {
      */
     private double getProbabilityFromControls() {
         String selected = probabilityComboBoxRight.getValue();
-        if (selected == null) {
-            selected = probabilityComboBox.getValue();
-        }
         if (selected == null && !probabilityListView.getSelectionModel().getSelectedItems().isEmpty()) {
             selected = probabilityListView.getSelectionModel().getSelectedItem();
         }
@@ -284,28 +276,6 @@ public class SimulationController {
     @FXML
     private void stopSimulationButton() {
         stopSimulationWithDialog();
-        canvas.requestFocus();
-    }
-
-    @FXML
-    private void chkShowTime() {
-        showTime = true;
-        timeon.setSelected(true);
-        menuTimeOn.setSelected(true);
-        timeoff.setSelected(false);
-        menuTimeOff.setSelected(false);
-        updateAndRender();
-        canvas.requestFocus();
-    }
-
-    @FXML
-    private void chkHideTime() {
-        showTime = false;
-        timeoff.setSelected(true);
-        menuTimeOff.setSelected(true);
-        timeon.setSelected(false);
-        menuTimeOn.setSelected(false);
-        updateAndRender();
         canvas.requestFocus();
     }
 
@@ -518,7 +488,7 @@ public class SimulationController {
         Button okButton = new Button("OK");
         okButton.setPrefWidth(80);
         okButton.setOnAction(e -> {
-            stopSimulation();
+            // habitat уже на паузе, просто завершаем
             startbtn.setDisable(false);
             stopbtn.setDisable(true);
             simulationEnded = true;
@@ -528,11 +498,10 @@ public class SimulationController {
         Button cancelButton = new Button("Отмена");
         cancelButton.setPrefWidth(80);
         cancelButton.setOnAction(e -> {
-            // Продолжаем симуляцию
-            if (habitat != null && !habitat.isRunning()) {
-                habitat.start();
-                timer.start();
-            }
+            // Возобновляем симуляцию
+            habitat.resume();
+            timer.start();
+            waitForOkCancel = false;
             dialogStage.close();
         });
 
@@ -542,8 +511,11 @@ public class SimulationController {
         Scene scene = new Scene(vbox);
         dialogStage.setScene(scene);
         dialogStage.setResizable(false);
-        
-        // Блокируем симуляцию на время диалога
+
+        // Приостанавливаем симуляцию на время диалога
+        if (habitat != null && habitat.isRunning()) {
+            habitat.pause();
+        }
         if (timer != null) {
             timer.stop();
         }
@@ -562,11 +534,12 @@ public class SimulationController {
     }
 
     private void toggleTimeDisplay() {
-        if (showTime) {
-            chkHideTime();
-        } else {
-            chkShowTime();
-        }
+        // Просто переключаем группу, слушатель сделает всё остальное
+        Toggle current = toggleGroup.getSelectedToggle();
+        Toggle target = (current == timeon) ? timeoff : timeon;
+        toggleGroup.selectToggle(target);
+
+        // updateAndRender() и requestFocus() уже в слушателе!
     }
 
     /**

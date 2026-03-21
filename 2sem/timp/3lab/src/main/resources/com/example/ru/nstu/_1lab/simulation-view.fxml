@@ -46,26 +46,42 @@
                 <TitledPane text="Параметры симуляции" expanded="true">
                     <VBox spacing="10" style="-fx-padding: 10;">
                         <Label text="Периоды рождения объектов" style="-fx-font-weight: bold;"/>
-                        
+
                         <HBox spacing="10" alignment="CENTER_LEFT">
                             <Label text="Разработчики (n1):"/>
                             <TextField fx:id="n1FieldRight" prefWidth="60" text="2"/>
                             <Label text="сек"/>
                         </HBox>
-                        
+
                         <HBox spacing="10" alignment="CENTER_LEFT">
                             <Label text="Менеджеры (n2):"/>
                             <TextField fx:id="n2FieldRight" prefWidth="60" text="3"/>
                             <Label text="сек"/>
                         </HBox>
-                        
+
                         <Separator/>
-                        
+
+                        <Label text="Время жизни объектов" style="-fx-font-weight: bold;"/>
+
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <Label text="Разработчики:"/>
+                            <TextField fx:id="developerLifetimeField" prefWidth="60" text="30"/>
+                            <Label text="сек"/>
+                        </HBox>
+
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <Label text="Менеджеры:"/>
+                            <TextField fx:id="managerLifetimeField" prefWidth="60" text="25"/>
+                            <Label text="сек"/>
+                        </HBox>
+
+                        <Separator/>
+
                         <Label text="Вероятность рождения разработчика" style="-fx-font-weight: bold;"/>
-                        
+
                         <Label text="ComboBox (шаг 10%):"/>
                         <ComboBox fx:id="probabilityComboBoxRight" prefWidth="150"/>
-                        
+
                         <Label text="Список (шаг 10%):"/>
                         <ListView fx:id="probabilityListView" prefHeight="150"/>
                     </VBox>
@@ -76,14 +92,15 @@
                     <VBox spacing="10" style="-fx-padding: 10;">
                         <Button fx:id="startbtn" text="Старт (B)" onAction="#startSimulationButton" prefWidth="150"/>
                         <Button fx:id="stopbtn" text="Стоп (E)" onAction="#stopSimulationButton" prefWidth="150"/>
+                        <Button text="Текущие объекты" onAction="#showCurrentObjectsButton" prefWidth="150"/>
                         <Button text="Информация (I)" onAction="#showInfoButton" prefWidth="150"/>
-                        
-                        <Separator/>
-
-                        <CheckBox fx:id="showInfoCheckBox" text="Показывать информацию" selected="true" onAction="#chkShowInfo"/>
 
                         <Separator/>
-                        
+
+                        <CheckBox fx:id="showInfoCheckBox" text="Показывать информацию" selected="true"/>
+
+                        <Separator/>
+
                         <Label text="Отображение времени:"/>
                         <RadioButton fx:id="timeon" text="Показать время" selected="true"/>
                         <RadioButton fx:id="timeoff" text="Скрыть время"/>

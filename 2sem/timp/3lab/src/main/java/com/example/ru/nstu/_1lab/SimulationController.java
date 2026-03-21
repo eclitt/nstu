@@ -17,6 +17,9 @@ import javafx.scene.text.FontWeight;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import java.util.List;
+import java.util.LinkedList;
+import java.util.HashMap;
+import java.util.Comparator;
 
 public class SimulationController {
 
@@ -58,6 +61,12 @@ public class SimulationController {
 
     @FXML
     private TextField n2FieldRight;
+
+    @FXML
+    private TextField developerLifetimeField;
+
+    @FXML
+    private TextField managerLifetimeField;
 
     @FXML
     private ComboBox<String> probabilityComboBoxRight;
@@ -127,11 +136,16 @@ public class SimulationController {
             }
         });
 
-        // Инициализация элементов (значения по умолчанию из FXML)
-        // showInfoCheckBox уже установлен в true из FXML
-        menuShowInfo.setSelected(showInfoCheckBox.isSelected());
+
+
+
+
+        showInfoCheckBox.setSelected(true);
+
+        // Элементы меню
         menuTimeOn.setSelected(true);
         menuTimeOff.setSelected(false);
+        menuShowInfo.setSelected(true);
 
         // Глобальный обработчик клавиш на сцене (работает независимо от фокуса)
         canvas.sceneProperty().addListener((obs, oldScene, newScene) -> {
@@ -202,8 +216,34 @@ public class SimulationController {
         int n1 = parsePeriod(n1FieldRight, "Период рождения разработчиков");
         int n2 = parsePeriod(n2FieldRight, "Период рождения менеджеров");
         double p1 = getProbabilityFromControls();
-        
-        return new SimulationSettings(n1, n2, p1, 50);
+        long developerLifetime = parseLifetime(developerLifetimeField, "Время жизни разработчиков");
+        long managerLifetime = parseLifetime(managerLifetimeField, "Время жизни менеджеров");
+
+        return new SimulationSettings(n1, n2, p1, 50, developerLifetime, managerLifetime);
+    }
+    
+    /**
+     * Парсинг времени жизни из TextField с валидацией
+     */
+    private long parseLifetime(TextField field, String fieldName) {
+        try {
+            String text = field.getText().trim();
+            if (text.isEmpty()) {
+                throw new NumberFormatException("Поле пустое");
+            }
+            int value = Integer.parseInt(text);
+            if (value <= 0) {
+                throw new NumberFormatException("Значение должно быть больше 0");
+            }
+            if (value > 300) {
+                throw new NumberFormatException("Значение не должно превышать 300 секунд");
+            }
+            return value * 1000L; // Конвертируем секунды в миллисекунды
+        } catch (NumberFormatException e) {
+            showErrorDialog(fieldName, "Должно быть целое число от 1 до 300 секунд");
+            field.setText(String.valueOf(fieldName.contains("разработчиков") ? "30" : "25"));
+            return fieldName.contains("разработчиков") ? 30000L : 25000L;
+        }
     }
 
     /**
@@ -276,8 +316,9 @@ public class SimulationController {
 
     @FXML
     private void chkShowInfo() {
-        showInfoDialog = showInfoCheckBox.isSelected();
-        menuShowInfo.setSelected(showInfoDialog);
+        showInfoDialog = menuShowInfo.isSelected();
+        showInfoCheckBox.setSelected(showInfoDialog);
+        canvas.requestFocus();
     }
 
     @FXML
@@ -389,20 +430,110 @@ public class SimulationController {
         dialogStage.setResizable(false);
         dialogStage.showAndWait();
     }
+    
+    @FXML
+    private void showCurrentObjectsButton() {
+        showCurrentObjectsDialog();
+        canvas.requestFocus();
+    }
+
+    /**
+     * Показывает модальное окно со списком текущих живых объектов.
+     * В диалоговое окно передаётся LinkedList с объектами и HashMap с временем рождения.
+     */
+    private void showCurrentObjectsDialog() {
+        if (habitat == null || !habitat.isRunning()) {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Текущие объекты");
+            alert.setHeaderText("Симуляция не запущена");
+            alert.setContentText("Запустите симуляцию для просмотра текущих объектов.");
+            alert.initOwner(canvas.getScene().getWindow());
+            alert.showAndWait();
+            return;
+        }
+        
+        // Получаем коллекции из Habitat
+        LinkedList<Employee> employees = habitat.getEmployeesLinkedList();
+        HashMap<Integer, Long> birthTimeMap = habitat.getBirthTimeMap();
+        
+        // Создаём модальное окно
+        Stage dialogStage = new Stage();
+        dialogStage.setTitle("Текущие объекты");
+        dialogStage.initModality(Modality.WINDOW_MODAL);
+        dialogStage.initOwner(canvas.getScene().getWindow());
+
+        VBox vbox = new VBox(10);
+        vbox.setPadding(new Insets(15));
+
+        Label titleLabel = new Label("Список живых объектов");
+        titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 16));
+
+        // Создаём TextArea для отображения списка
+        TextArea textArea = new TextArea();
+        textArea.setPrefRowCount(15);
+        textArea.setPrefColumnCount(50);
+        textArea.setEditable(false);
+        textArea.setWrapText(false);
+
+        // Формируем текст списка объектов
+        StringBuilder sb = new StringBuilder();
+        sb.append("ID\t\tТип\t\t\tВремя рождения (мс)\tВремя жизни (сек)\n");
+        sb.append("=".repeat(70)).append("\n");
+        
+        // Сортируем по времени рождения (ключу)
+        employees.sort(Comparator.comparingLong(Employee::getBirthTime));
+        
+        for (Employee emp : employees) {
+            String type = emp.getType();
+            long birthTime = emp.getBirthTime();
+            long lifetimeSec = emp.getLifetime() / 1000;
+            sb.append(emp.getId()).append("\t\t")
+              .append(type).append("\t\t\t")
+              .append(birthTime).append("\t\t\t\t")
+              .append(lifetimeSec).append("\n");
+        }
+        
+        if (employees.isEmpty()) {
+            sb.append("Нет активных объектов\n");
+        }
+        
+        sb.append("=".repeat(70)).append("\n");
+        sb.append("Всего объектов: ").append(employees.size());
+
+        textArea.setText(sb.toString());
+
+        Button closeBtn = new Button("Закрыть");
+        closeBtn.setPrefWidth(100);
+        closeBtn.setOnAction(e -> dialogStage.close());
+
+        HBox buttonBox = new HBox(closeBtn);
+        buttonBox.setAlignment(Pos.CENTER);
+
+        vbox.getChildren().addAll(titleLabel, textArea, buttonBox);
+
+        Scene scene = new Scene(vbox);
+        dialogStage.setScene(scene);
+        dialogStage.setResizable(false);
+        dialogStage.showAndWait();
+    }
 
     private void startSimulation() {
         // Получаем и применяем настройки
         SimulationSettings settings = getSimulationSettings();
-        
+
         if (habitat == null) {
-            habitat = Habitat.getInstance(canvas.getWidth(), canvas.getHeight(), 
+            habitat = Habitat.getInstance(canvas.getWidth(), canvas.getHeight(),
                     settings.n1, settings.n2, settings.p1, settings.kPercent);
+            habitat.setDeveloperLifetime(settings.developerLifetime);
+            habitat.setManagerLifetime(settings.managerLifetime);
         } else if (!habitat.isRunning()) {
             Habitat.resetInstance();
             habitat = Habitat.getInstance(canvas.getWidth(), canvas.getHeight(),
                     settings.n1, settings.n2, settings.p1, settings.kPercent);
+            habitat.setDeveloperLifetime(settings.developerLifetime);
+            habitat.setManagerLifetime(settings.managerLifetime);
         }
-        
+
         if (!habitat.isRunning()) {
             Employee.resetCounter();
             habitat.start();
@@ -428,11 +559,8 @@ public class SimulationController {
                 // Показываем модальное окно с TextArea
                 showStopConfirmationDialog();
             } else {
-                // Останавливаем сразу без диалога
-                habitat.stop();
-                simulationEnded = true;
-                timer.stop();
-                updateAndRender();
+                // Останавливаем сразу
+                stopSimulation();
                 startbtn.setDisable(false);
                 stopbtn.setDisable(true);
             }
@@ -519,6 +647,15 @@ public class SimulationController {
         waitForOkCancel = true;
         
         dialogStage.showAndWait();
+    }
+
+    private void stopSimulation() {
+        if (habitat != null && habitat.isRunning()) {
+            habitat.stop();
+            simulationEnded = true;
+            timer.stop();
+            updateAndRender();
+        }
     }
 
     private void toggleTimeDisplay() {
@@ -694,12 +831,16 @@ public class SimulationController {
     private static class SimulationSettings {
         int n1, n2, kPercent;
         double p1;
+        long developerLifetime;
+        long managerLifetime;
 
-        SimulationSettings(int n1, int n2, double p1, int kPercent) {
+        SimulationSettings(int n1, int n2, double p1, int kPercent, long developerLifetime, long managerLifetime) {
             this.n1 = n1;
             this.n2 = n2;
             this.p1 = p1;
             this.kPercent = kPercent;
+            this.developerLifetime = developerLifetime;
+            this.managerLifetime = managerLifetime;
         }
     }
 }

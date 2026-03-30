@@ -60,7 +60,7 @@ public class Main {
             JsonNode root = mapper.readTree(_json);
             ArrayNode results = (ArrayNode) root.get("results");
 
-            int count = Math.min(3, results.size());
+            int count = Math.min(10, results.size());
 
             for (int i = 0; i < count; i++) {
                 JsonNode pokemon = results.get(i);

@@ -21,6 +21,12 @@ import java.util.List;
 public class SimulationController {
 
     @FXML
+    private VBox MAINWINDOW;
+
+    @FXML
+    private MenuBar lmao;
+
+    @FXML
     private SplitPane splitPane;
 
     @FXML
@@ -123,7 +129,7 @@ public class SimulationController {
             if (this.showTime != newShowTime) {
                 this.showTime = newShowTime;
                 updateAndRender();
-                canvas.requestFocus();
+                
             }
         });
 
@@ -133,27 +139,22 @@ public class SimulationController {
         menuTimeOn.setSelected(true);
         menuTimeOff.setSelected(false);
 
-        // Глобальный обработчик клавиш на сцене (работает независимо от фокуса)
-        canvas.sceneProperty().addListener((obs, oldScene, newScene) -> {
-            if (newScene != null) {
-                newScene.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, event -> {
-                    KeyCode code = event.getCode();
-                    if (code == KeyCode.B) {
-                        startSimulation();
-                        startbtn.setDisable(true);
-                        stopbtn.setDisable(false);
-                        event.consume();
-                    } else if (code == KeyCode.E) {
-                        stopSimulationWithDialog();
-                        event.consume();
-                    } else if (code == KeyCode.T) {
-                        toggleTimeDisplay();
-                        event.consume();
-                    } else if (code == KeyCode.I) {
-                        showInfoDialog();
-                        event.consume();
-                    }
-                });
+        MAINWINDOW.setOnKeyPressed(event -> {
+            KeyCode code = event.getCode();
+            if (code == KeyCode.B) {
+                startSimulation();
+                startbtn.setDisable(true);
+                stopbtn.setDisable(false);
+                event.consume();
+            } else if (code == KeyCode.E) {
+                stopSimulationWithDialog();
+                event.consume();
+            } else if (code == KeyCode.T) {
+                toggleTimeDisplay();
+                event.consume();
+            } else if (code == KeyCode.I) {
+                showInfoDialog();
+                event.consume();
             }
         });
 
@@ -265,13 +266,13 @@ public class SimulationController {
         startSimulation();
         startbtn.setDisable(true);
         stopbtn.setDisable(false);
-        canvas.requestFocus();
+        
     }
 
     @FXML
     private void stopSimulationButton() {
         stopSimulationWithDialog();
-        canvas.requestFocus();
+        
     }
 
     @FXML
@@ -326,7 +327,7 @@ public class SimulationController {
     @FXML
     private void showInfoButton() {
         showInfoDialog();
-        canvas.requestFocus();
+        
     }
 
     /**
@@ -526,8 +527,7 @@ public class SimulationController {
         Toggle current = toggleGroup.getSelectedToggle();
         Toggle target = (current == timeon) ? timeoff : timeon;
         toggleGroup.selectToggle(target);
-
-        // updateAndRender() и requestFocus() уже в слушателе!
+        
     }
 
     /**

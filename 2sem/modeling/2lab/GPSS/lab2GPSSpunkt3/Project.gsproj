@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<GpssStudioProject FormatVersion="1">
+  <Guid>91ded3ba-0c75-49d1-b754-e3f5716d0f74</Guid>
+  <Name>2labGPSS</Name>
+  <Description></Description>
+  <CreationDate>2026-04-01T12:42:01.8247086+07:00</CreationDate>
+  <SimModels>
+    <SimModel>
+      <Name>punct3</Name>
+      <Description></Description>
+      <Version>1</Version>
+      <CreationDate>01.04.2026 12:42:01</CreationDate>
+      <IsCurrent>True</IsCurrent>
+      <RunDate>01.04.2026 12:45:07</RunDate>
+    </SimModel>
+  </SimModels>
+  <TebsLibraries>
+    <TebsLibrary>
+      <Guid>ca20dfe8-7a2a-4fac-9210-14c0ea7c916f</Guid>
+      <Version>1.0.0.0</Version>
+      <Name>Библиотека ТЭБов</Name>
+      <Description></Description>
+      <CreationDate>01.04.2026 12:42:01</CreationDate>
+      <Format>0</Format>
+    </TebsLibrary>
+  </TebsLibraries>
+</GpssStudioProject>

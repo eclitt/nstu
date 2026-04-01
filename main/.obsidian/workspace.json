@@ -20,8 +20,37 @@
               "icon": "lucide-file",
               "title": "песенка 1"
             }
+          },
+          {
+            "id": "fd7bb6102ef15d1a",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "вопросы.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "вопросы"
+            }
+          },
+          {
+            "id": "01e9f603fe6b77c8",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Что делать.md",
+                "mode": "preview",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Что делать"
+            }
           }
-        ]
+        ],
+        "currentTab": 2
       }
     ],
     "direction": "vertical"
@@ -178,22 +207,22 @@
       "templates:Вставить шаблон": false,
       "command-palette:Открыть палитру команд": false,
       "bases:Создать новую базу": false,
-      "remotely-save:Remotely Save": false,
       "obsidian-excalidraw-plugin:Создать новый чертеж": false
     }
   },
-  "active": "f34dd269589ebe79",
+  "active": "01e9f603fe6b77c8",
   "lastOpenFiles": [
+    "вопросы.md",
+    "Что делать.md",
+    "еще песенка.md",
+    "Без названия.md",
+    "Типок.md",
+    "песенка 1.md",
     "README.md",
     "Drawing 2026-03-15 15.55.55.excalidraw.md",
-    "песенка 1.md",
     "Ноты.md",
     "зал.md",
     "Леруа.md",
-    "еще песенка.md",
-    "вопросы.md",
-    "Без названия.md",
-    "Без названия 1.md",
     "Excalidraw/Drawing 2026-03-20 15.37.15.excalidraw.md",
     "Чо делатт.md",
     "CLASSES.md",

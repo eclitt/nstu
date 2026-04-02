@@ -5,23 +5,16 @@ import java.util.*;
 public class Habitat {
     private static Habitat instance;
 
-    // Коллекция для хранения объектов (LinkedList по варианту 6)
-    private LinkedList<Employee> employees = new LinkedList<>();
-
-    // Коллекция для хранения и поиска уникальных идентификаторов (TreeSet по варианту 6)
-    private TreeSet<Integer> existingIds = new TreeSet<>();
-
-    // Коллекция для хранения времени рождения объектов (HashMap по варианту 6)
-    // Ключ: ID объекта, Значение: время рождения (мс от начала симуляции)
-    private HashMap<Integer, Long> birthTimeMap = new HashMap<>();
+    // Ссылка на синглтон коллекций
+    private final CollectionsStorage storage;
 
     // Параметры симуляции
     private int n1 = 2;           // интервал генерации разработчика (сек)
     private int n2 = 3;           // интервал генерации менеджера (сек)
     private double p1 = 0.7;      // вероятность появления разработчика
     private int kPercent = 50;    // максимальный процент менеджеров от разработчиков
-    
-    // Время жизни для разных типов объектов (мс)
+
+    // Время жизни для разных типов объектов  (мс)
     private long developerLifetime = 30000;  // 30 секунд по умолчанию
     private long managerLifetime = 25000;    // 25 секунд по умолчанию
 
@@ -47,6 +40,7 @@ public class Habitat {
      * Приватный конструктор для предотвращения создания экземпляров извне.
      */
     private Habitat() {
+        this.storage = CollectionsStorage.getInstance();
     }
 
     /**
@@ -93,10 +87,6 @@ public class Habitat {
 
     /**
      * Применяет новые параметры симуляции.
-     * @param n1 интервал генерации разработчика (сек)
-     * @param n2 интервал генерации менеджера (сек)
-     * @param p1 вероятность появления разработчика
-     * @param kPercent максимальный процент менеджеров от разработчиков
      */
     public synchronized void applySettings(int n1, int n2, double p1, int kPercent) {
         this.n1 = n1;
@@ -104,35 +94,19 @@ public class Habitat {
         this.p1 = p1;
         this.kPercent = kPercent;
     }
-    
-    /**
-     * Устанавливает время жизни для разработчиков.
-     * @param lifetime время жизни в миллисекундах
-     */
+
     public void setDeveloperLifetime(long lifetime) {
         this.developerLifetime = lifetime;
     }
-    
-    /**
-     * Устанавливает время жизни для менеджеров.
-     * @param lifetime время жизни в миллисекундах
-     */
+
     public void setManagerLifetime(long lifetime) {
         this.managerLifetime = lifetime;
     }
-    
-    /**
-     * Возвращает время жизни разработчиков.
-     * @return время жизни в миллисекундах
-     */
+
     public long getDeveloperLifetime() {
         return developerLifetime;
     }
-    
-    /**
-     * Возвращает время жизни менеджеров.
-     * @return время жизни в миллисекундах
-     */
+
     public long getManagerLifetime() {
         return managerLifetime;
     }
@@ -164,36 +138,27 @@ public class Habitat {
             lastManagerTime = elapsedTime;
         }
 
-        // Обновление всех объектов
-        for (Employee employee : employees) {
+        // Обновление всех объектов (получаем копию списка из хранилища)
+        for (Employee employee : storage.getEmployees()) {
             employee.update(elapsedTime);
         }
-        
+
         // Удаление объектов с истёкшим временем жизни
         removeExpiredEmployees(elapsedTime);
     }
-    
+
     /**
-     * Удаляет объекты с истёкшим временем жизни из всех коллекций.
+     * Удаляет объекты с истёкшим временем жизни через CollectionsStorage.
      * @param currentTime текущее время симуляции
      */
     private void removeExpiredEmployees(long currentTime) {
-        Iterator<Employee> iterator = employees.iterator();
-        while (iterator.hasNext()) {
-            Employee employee = iterator.next();
-            if (employee.isExpired(currentTime)) {
-                // Удаляем из LinkedList
-                iterator.remove();
-                // Удаляем из TreeSet идентификаторов
-                existingIds.remove(employee.getId());
-                // Удаляем из HashMap времени рождения
-                birthTimeMap.remove(employee.getId());
-                
-                if (employee instanceof Developer) {
-                    developerCount--;
-                } else if (employee instanceof Manager) {
-                    managerCount--;
-                }
+        List<Employee> removed = storage.removeExpired(currentTime);
+
+        for (Employee employee : removed) {
+            if (employee instanceof Developer) {
+                developerCount--;
+            } else if (employee instanceof Manager) {
+                managerCount--;
             }
         }
     }
@@ -203,9 +168,9 @@ public class Habitat {
         developer.setLifetime(developerLifetime);
         developer.setBirthTime(currentTime);
         placeEmployee(developer);
-        employees.add(developer);
-        existingIds.add(developer.getId());
-        birthTimeMap.put(developer.getId(), currentTime);
+
+        // Добавление через хранилище
+        storage.addEmployee(developer, currentTime);
         developerCount++;
     }
 
@@ -214,9 +179,9 @@ public class Habitat {
         manager.setLifetime(managerLifetime);
         manager.setBirthTime(currentTime);
         placeEmployee(manager);
-        employees.add(manager);
-        existingIds.add(manager.getId());
-        birthTimeMap.put(manager.getId(), currentTime);
+
+        // Добавление через хранилище
+        storage.addEmployee(manager, currentTime);
         managerCount++;
     }
 
@@ -235,7 +200,7 @@ public class Habitat {
             return false;
         }
         double currentPercent = (managerCount * 100.0) / developerCount;
-        return currentPercent < kPercent;
+        return currentPercent <= kPercent;
     }
 
     /**
@@ -249,10 +214,13 @@ public class Habitat {
         lastManagerTime = 0;
         developerCount = 0;
         managerCount = 0;
-        employees.clear();
-        existingIds.clear();
-        birthTimeMap.clear();
-        Employee.idSet.clear();
+
+        // Очистка через хранилище
+        storage.clear();
+        // Очистка статического набора в классе Employee (как было в оригинале)
+        if (Employee.idSet != null) {
+            Employee.idSet.clear();
+        }
     }
 
     /**
@@ -262,21 +230,17 @@ public class Habitat {
         if (isRunning) {
             elapsedTime = System.currentTimeMillis() - startTime;
             isRunning = false;
-            employees.clear();
-            existingIds.clear();
-            birthTimeMap.clear();
+            storage.clear();
         }
     }
 
     /**
      * Приостанавливает симуляцию без очистки данных.
-     * Может быть возобновлена через resume().
      */
     public synchronized void pause() {
         if (isRunning) {
             pauseTime = System.currentTimeMillis() - startTime;
             isRunning = false;
-            // employees.clear() НЕ вызываем — сохраняем сотрудников
         }
     }
 
@@ -290,16 +254,10 @@ public class Habitat {
         }
     }
 
-    /**
-     * Проверяет, запущена ли симуляция.
-     */
     public boolean isRunning() {
         return isRunning;
     }
 
-    /**
-     * Возвращает время симуляции в миллисекундах.
-     */
     public long getElapsedTime() {
         if (!isRunning) {
             return elapsedTime;
@@ -308,59 +266,42 @@ public class Habitat {
     }
 
     /**
-     * Возвращает список сотрудников.
+     * Возвращает список сотрудников (через хранилище).
      */
     public List<Employee> getEmployees() {
-        return new LinkedList<>(employees);
-    }
-    
-    /**
-     * Возвращает LinkedList с сотрудниками (для передачи в диалоговое окно).
-     * @return LinkedList сотрудников
-     */
-    public LinkedList<Employee> getEmployeesLinkedList() {
-        return new LinkedList<>(employees);
-    }
-    
-    /**
-     * Возвращает HashMap с временем рождения объектов.
-     * @return HashMap<ID, время рождения>
-     */
-    public HashMap<Integer, Long> getBirthTimeMap() {
-        return new HashMap<>(birthTimeMap);
+        return storage.getEmployees();
     }
 
     /**
-     * Возвращает количество разработчиков.
+     * Возвращает LinkedList с сотрудниками.
      */
+    public LinkedList<Employee> getEmployeesLinkedList() {
+        return storage.getEmployeesLinkedList();
+    }
+
+    /**
+     * Возвращает HashMap с временем рождения объектов.
+     */
+    public HashMap<Integer, Long> getBirthTimeMap() {
+        return storage.getBirthTimeMap();
+    }
+
     public int getDeveloperCount() {
         return developerCount;
     }
 
-    /**
-     * Возвращает количество менеджеров.
-     */
     public int getManagerCount() {
         return managerCount;
     }
 
-    /**
-     * Возвращает общее количество сгенерированных объектов.
-     */
     public int getTotalCount() {
         return developerCount + managerCount;
     }
 
-    /**
-     * Возвращает ширину рабочей области.
-     */
     public double getWidth() {
         return width;
     }
 
-    /**
-     * Возвращает высоту рабочей области.
-     */
     public double getHeight() {
         return height;
     }

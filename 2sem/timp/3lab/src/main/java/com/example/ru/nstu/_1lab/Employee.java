@@ -33,7 +33,12 @@ public abstract class Employee implements IBehaviour {
         this.birthTime = 0;
         this.lifetime = 0;
     }
-    
+
+    @Override
+    public boolean equals(Object obj) {
+        return super.equals(obj);
+    }
+
     /**
      * Генерирует уникальный случайный идентификатор.
      * @return уникальный ID

@@ -1,0 +1,13 @@
+Experiment_ID	Replication_ID	Response_ID	Run_Number	Response_Name	Value
+26	26	1	0	11_Queue_AveLength_prm	1,93659788890092
+26	26	2	0	11_Queue_AveWait_prm	5,79353902428429
+26	26	3	0	11_Queue_MaxLength_prm	4
+26	26	4	0	11_Queue_MaxWait_prm	10,2363259962167
+26	26	5	0	28_Activity_Utilization_prm	0,994213686222293
+26	26	6	0	47_Activity_Utilization_prm	0,366094111463143
+27	27	1	0	11_Queue_AveLength_prm	1,76105938753354
+27	27	2	0	11_Queue_AveWait_prm	5,33002278811411
+27	27	3	0	11_Queue_MaxLength_prm	4
+27	27	4	0	11_Queue_MaxWait_prm	10,4726281645453
+27	27	5	0	28_Activity_Utilization_prm	0,996472932730077
+27	27	6	0	47_Activity_Utilization_prm	0,267781021287927

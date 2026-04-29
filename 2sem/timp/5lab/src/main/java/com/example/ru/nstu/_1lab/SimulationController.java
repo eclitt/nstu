@@ -14,12 +14,12 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.application.Platform;
+import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import java.util.List;
-import java.util.LinkedList;
-import java.util.HashMap;
-import java.util.Comparator;
+import java.io.*;
+import java.util.*;
 
 public class SimulationController {
 
@@ -116,6 +116,8 @@ public class SimulationController {
     private int totalManagers = 0;
     private long finalTime = 0;
 
+    private ConsoleWindow consoleWindow;
+
     // Значения вероятностей
     private final List<Double> probabilityValues = List.of(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0);
     private final List<String> probabilityStrings = List.of("10%", "20%", "30%", "40%", "50%", "60%", "70%", "80%", "90%", "100%");
@@ -204,6 +206,9 @@ public class SimulationController {
                 updateStatistics();
             }
         };
+
+        // Загрузка конфигурации при запуске
+        loadConfig();
     }
 
     /**
@@ -380,9 +385,160 @@ public class SimulationController {
     }
 
     @FXML
-    private void exitApplication() {
-        Stage stage = (Stage) canvas.getScene().getWindow();
-        stage.close();
+    public void showConsole() {
+        try {
+            if (consoleWindow == null) {
+                consoleWindow = new ConsoleWindow(this);
+            }
+            consoleWindow.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public int fireAllManagers() {
+        if (habitat != null) {
+            int count = habitat.fireAllManagers();
+            updateStatistics();
+            return count;
+        }
+        return 0;
+    }
+
+    public void hireManagers(int n) {
+        if (habitat != null) {
+            habitat.hireManagers(n);
+            updateStatistics();
+        }
+    }
+
+    @FXML
+    public void saveSimulation() {
+        if (habitat == null) return;
+
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Сохранить симуляцию");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Simulation Files", "*.sim"));
+        File file = fileChooser.showSaveDialog(canvas.getScene().getWindow());
+
+        if (file != null) {
+            try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file))) {
+                List<Employee> employees = CollectionsStorage.getInstance().getEmployees();
+                oos.writeObject(employees);
+                oos.writeLong(habitat.getElapsedTime());
+                showAlert("Успех", "Симуляция сохранена в " + file.getName());
+            } catch (IOException e) {
+                showAlert("Ошибка", "Не удалось сохранить симуляцию: " + e.getMessage());
+            }
+        }
+    }
+
+    @FXML
+    @SuppressWarnings("unchecked")
+    public void loadSimulation() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Загрузить симуляцию");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Simulation Files", "*.sim"));
+        File file = fileChooser.showOpenDialog(canvas.getScene().getWindow());
+
+        if (file != null) {
+            try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+                // Останавливаем текущую симуляцию
+                if (habitat != null && habitat.isRunning()) {
+                    stopSimulation();
+                }
+
+                List<Employee> employees = (List<Employee>) ois.readObject();
+                long savedElapsedTime = ois.readLong();
+
+                // Сброс и инициализация среды
+                Habitat.resetInstance();
+                startSimulation();
+                
+                // Очищаем текущие объекты (созданные при старте) и добавляем загруженные
+                CollectionsStorage.getInstance().clear();
+                habitat.resetCounts();
+
+                for (Employee emp : employees) {
+                    // Корректировка времени рождения: 
+                    // прожитое_время = savedElapsedTime - старое_birthTime
+                    // новое_birthTime = текущее_время_симуляции - прожитое_время
+                    // Поскольку мы только что начали симуляцию, текущее время = 0
+                    emp.setBirthTime(emp.getBirthTime() - savedElapsedTime);
+                    habitat.addLoadedEmployee(emp);
+                }
+
+                startbtn.setDisable(true);
+                stopbtn.setDisable(false);
+                updateStatistics();
+                showAlert("Успех", "Симуляция загружена из " + file.getName());
+            } catch (IOException | ClassNotFoundException e) {
+                showAlert("Ошибка", "Не удалось загрузить симуляцию: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void saveConfig() {
+        File configFile = new File("config.txt");
+        try (PrintWriter writer = new PrintWriter(new FileWriter(configFile))) {
+            writer.println("n1=" + n1FieldRight.getText());
+            writer.println("n2=" + n2FieldRight.getText());
+            writer.println("p1=" + probabilityComboBoxRight.getValue());
+            writer.println("devLifetime=" + developerLifetimeField.getText());
+            writer.println("mgrLifetime=" + managerLifetimeField.getText());
+            writer.println("showTime=" + (timeon.isSelected() ? "true" : "false"));
+            writer.println("showInfo=" + showInfoCheckBox.isSelected());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void loadConfig() {
+        File configFile = new File("config.txt");
+        if (!configFile.exists()) return;
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(configFile))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split("=");
+                if (parts.length != 2) continue;
+                String key = parts[0];
+                String value = parts[1];
+
+                switch (key) {
+                    case "n1": n1FieldRight.setText(value); break;
+                    case "n2": n2FieldRight.setText(value); break;
+                    case "p1": probabilityComboBoxRight.setValue(value); break;
+                    case "devLifetime": developerLifetimeField.setText(value); break;
+                    case "mgrLifetime": managerLifetimeField.setText(value); break;
+                    case "showTime": 
+                        if (value.equals("true")) timeon.setSelected(true);
+                        else timeoff.setSelected(true);
+                        break;
+                    case "showInfo": showInfoCheckBox.setSelected(Boolean.parseBoolean(value)); break;
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
+    public void exitApplication() {
+        saveConfig();
+        if (consoleWindow != null) {
+            consoleWindow.close();
+        }
+        Platform.exit();
+    }
+
+    private void showAlert(String title, String content) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
     }
 
     @FXML
@@ -556,7 +712,6 @@ public class SimulationController {
         
         // Получаем коллекции из Habitat
         LinkedList<Employee> employees = habitat.getEmployeesLinkedList();
-        HashMap<Integer, Long> birthTimeMap = habitat.getBirthTimeMap();
         
         // Создаём модальное окно
         Stage dialogStage = new Stage();

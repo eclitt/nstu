@@ -13,12 +13,16 @@
             <MenuItem text="Старт" onAction="#startSimulationButton"/>
             <MenuItem text="Стоп" onAction="#stopSimulationButton"/>
             <SeparatorMenuItem/>
+            <MenuItem text="Загрузить" onAction="#loadSimulation"/>
+            <MenuItem text="Сохранить" onAction="#saveSimulation"/>
+            <SeparatorMenuItem/>
             <MenuItem text="Выход" onAction="#exitApplication" accelerator="ALT+F4"/>
         </Menu>
         <Menu text="Симуляция">
             <MenuItem text="Старт" onAction="#startSimulationButton"/>
             <MenuItem text="Стоп" onAction="#stopSimulationButton"/>
             <SeparatorMenuItem/>
+            <MenuItem text="Консоль" onAction="#showConsole"/>
             <MenuItem text="Информация" onAction="#showInfoButton"/>
         </Menu>
         <Menu text="Вид">

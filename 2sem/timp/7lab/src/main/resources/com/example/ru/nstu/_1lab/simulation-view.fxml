@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.canvas.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/17.0.12"
+      fx:controller="com.example.ru.nstu._1lab.SimulationController">
+
+    <!-- Главное меню -->
+    <MenuBar>
+        <Menu text="Файл">
+            <MenuItem text="Старт" onAction="#startSimulationButton"/>
+            <MenuItem text="Стоп" onAction="#stopSimulationButton"/>
+            <SeparatorMenuItem/>
+            <MenuItem text="Загрузить" onAction="#loadSimulation"/>
+            <MenuItem text="Сохранить" onAction="#saveSimulation"/>
+            <SeparatorMenuItem/>
+            <MenuItem text="Выход" onAction="#exitApplication" accelerator="ALT+F4"/>
+        </Menu>
+        <Menu text="База данных">
+            <Menu text="Сохранить">
+                <MenuItem text="Разработчики" onAction="#saveDevelopersToDB"/>
+                <MenuItem text="Менеджеры" onAction="#saveManagersToDB"/>
+            </Menu>
+            <Menu text="Загрузить">
+                <MenuItem text="Разработчики" onAction="#loadDevelopersFromDB"/>
+                <MenuItem text="Менеджеры" onAction="#loadManagersFromDB"/>
+            </Menu>
+        </Menu>
+        <Menu text="Симуляция">
+            <MenuItem text="Старт" onAction="#startSimulationButton"/>
+            <MenuItem text="Стоп" onAction="#stopSimulationButton"/>
+            <SeparatorMenuItem/>
+            <MenuItem text="Консоль" onAction="#showConsole"/>
+            <MenuItem text="Информация" onAction="#showInfoButton"/>
+        </Menu>
+        <Menu text="Вид">
+            <CheckMenuItem text="Показать время" fx:id="menuTimeOn"/>
+            <CheckMenuItem text="Скрыть время" fx:id="menuTimeOff"/>
+            <SeparatorMenuItem/>
+            <CheckMenuItem text="Показывать информацию" fx:id="menuShowInfo" onAction="#chkShowInfo"/>
+        </Menu>
+        <Menu text="Справка">
+            <MenuItem text="О программе" onAction="#showAboutDialog"/>
+        </Menu>
+    </MenuBar>
+
+    <SplitPane fx:id="splitPane" VBox.vgrow="ALWAYS">
+        <!-- Левая часть - симуляция -->
+        <VBox alignment="CENTER">
+            <Canvas fx:id="canvas" focusTraversable="true" height="600" width="500"/>
+        </VBox>
+
+        <!-- Правая часть - управление -->
+        <ScrollPane fitToWidth="true">
+            <VBox alignment="TOP_LEFT" spacing="15" style="-fx-padding: 15;">
+                
+                <!-- Параметры симуляции -->
+                <TitledPane text="Параметры симуляции" expanded="true">
+                    <VBox spacing="10" style="-fx-padding: 10;">
+                        <Label text="Периоды рождения объектов" style="-fx-font-weight: bold;"/>
+
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <Label text="Разработчики (n1):"/>
+                            <TextField fx:id="n1FieldRight" prefWidth="60" text="2"/>
+                            <Label text="сек"/>
+                        </HBox>
+
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <Label text="Менеджеры (n2):"/>
+                            <TextField fx:id="n2FieldRight" prefWidth="60" text="3"/>
+                            <Label text="сек"/>
+                        </HBox>
+
+                        <Separator/>
+
+                        <Label text="Время жизни объектов" style="-fx-font-weight: bold;"/>
+
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <Label text="Разработчики:"/>
+                            <TextField fx:id="developerLifetimeField" prefWidth="60" text="30"/>
+                            <Label text="сек"/>
+                        </HBox>
+
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <Label text="Менеджеры:"/>
+                            <TextField fx:id="managerLifetimeField" prefWidth="60" text="25"/>
+                            <Label text="сек"/>
+                        </HBox>
+
+                        <Separator/>
+
+                        <Label text="Вероятность рождения разработчика" style="-fx-font-weight: bold;"/>
+
+                        <Label text="ComboBox (шаг 10%):"/>
+                        <ComboBox fx:id="probabilityComboBoxRight" prefWidth="150"/>
+
+                        <Label text="Список (шаг 10%):"/>
+                        <ListView fx:id="probabilityListView" prefHeight="150"/>
+                    </VBox>
+                </TitledPane>
+                
+                <!-- Управление -->
+                <TitledPane text="Управление" expanded="true">
+                    <VBox spacing="10" style="-fx-padding: 10;">
+                        <Button fx:id="startbtn" text="Старт (B)" onAction="#startSimulationButton" prefWidth="150"/>
+                        <Button fx:id="stopbtn" text="Стоп (E)" onAction="#stopSimulationButton" prefWidth="150"/>
+                        <Button text="Текущие объекты" onAction="#showCurrentObjectsButton" prefWidth="150"/>
+                        <Button text="Информация (I)" onAction="#showInfoButton" prefWidth="150"/>
+
+                        <Separator/>
+
+                        <CheckBox fx:id="showInfoCheckBox" text="Показывать информацию" selected="true"/>
+
+                        <Separator/>
+
+                        <Label text="Отображение времени:"/>
+                        <RadioButton fx:id="timeon" text="Показать время" selected="true"/>
+                        <RadioButton fx:id="timeoff" text="Скрыть время"/>
+                    </VBox>
+                </TitledPane>
+
+                <!-- Управление AI потоками -->
+                <TitledPane text="Управление AI" expanded="true">
+                    <VBox spacing="10" style="-fx-padding: 10;">
+                        <Label text="Разработчики" style="-fx-font-weight: bold;"/>
+                        <HBox spacing="5">
+                            <Button fx:id="pauseDeveloperAI" text="Пауза" onAction="#pauseDeveloperAI" prefWidth="70"/>
+                            <Button fx:id="resumeDeveloperAI" text="Возобновить" onAction="#resumeDeveloperAI" prefWidth="100"/>
+                        </HBox>
+                        <HBox spacing="5" alignment="CENTER_LEFT">
+                            <Label text="Приоритет:"/>
+                            <ComboBox fx:id="developerPriorityComboBox" prefWidth="60"/>
+                        </HBox>
+
+                        <Separator/>
+
+                        <Label text="Менеджеры" style="-fx-font-weight: bold;"/>
+                        <HBox spacing="5">
+                            <Button fx:id="pauseManagerAI" text="Пауза" onAction="#pauseManagerAI" prefWidth="70"/>
+                            <Button fx:id="resumeManagerAI" text="Возобновить" onAction="#resumeManagerAI" prefWidth="100"/>
+                        </HBox>
+                        <HBox spacing="5" alignment="CENTER_LEFT">
+                            <Label text="Приоритет:"/>
+                            <ComboBox fx:id="managerPriorityComboBox" prefWidth="60"/>
+                        </HBox>
+                    </VBox>
+                </TitledPane>
+                
+                <!-- Статистика -->
+                <TitledPane text="Статистика" expanded="true">
+                    <VBox spacing="5" style="-fx-padding: 10;">
+                        <Label fx:id="timeLabel" text="Время: 0.000 сек"/>
+                        <Label fx:id="developersLabel" text="Разработчиков: 0"/>
+                        <Label fx:id="managersLabel" text="Менеджеров: 0"/>
+                        <Label fx:id="totalLabel" text="Всего: 0"/>
+                    </VBox>
+                </TitledPane>
+
+                <!-- Сеть -->
+                <TitledPane text="Сеть" expanded="true">
+                    <VBox spacing="10" style="-fx-padding: 10;">
+                        <HBox spacing="5" alignment="CENTER_LEFT">
+                            <Label text="Порт:"/>
+                            <TextField fx:id="portField" prefWidth="60" text="8080"/>
+                        </HBox>
+                        <Button fx:id="connectBtn" text="Подключиться" onAction="#connectToServer" prefWidth="150"/>
+                        <Label text="Подключенные клиенты:"/>
+                        <ListView fx:id="clientListView" prefHeight="100"/>
+                        <HBox spacing="5" alignment="CENTER_LEFT">
+                            <Label text="Отдать:"/>
+                            <ComboBox fx:id="giveTypeCombo" prefWidth="100"/>
+                        </HBox>
+                        <HBox spacing="5" alignment="CENTER_LEFT">
+                            <Label text="Получить:"/>
+                            <ComboBox fx:id="getTypeCombo" prefWidth="100"/>
+                        </HBox>
+                        <Button fx:id="swapBtn" text="Обменяться объектами" onAction="#sendSwapRequest" prefWidth="150" disable="true"/>
+                    </VBox>
+                </TitledPane>
+                
+            </VBox>
+        </ScrollPane>
+    </SplitPane>
+</VBox>

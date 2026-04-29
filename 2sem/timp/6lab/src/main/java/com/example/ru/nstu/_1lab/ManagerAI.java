@@ -48,6 +48,16 @@ public class ManagerAI extends BaseAI {
         }
     }
 
+    /**
+     * Инициализирует параметры орбиты для менеджера.
+     */
+    public synchronized void initManager(Manager manager) {
+        double centerX = orbitRadius + Math.random() * (worldWidth - 2 * orbitRadius);
+        double centerY = orbitRadius + Math.random() * (worldHeight - 2 * orbitRadius);
+        orbitCenters.put(manager, new double[]{centerX, centerY});
+        employeeAngles.put(manager, Math.random() * 2 * Math.PI);
+    }
+
     @Override
     protected void updatePositions() {
         // Вычисляем угловую скорость: ω = V / R (рад/с)
@@ -105,27 +115,6 @@ public class ManagerAI extends BaseAI {
                 employeeAngles.put(emp, angle);
             }
         }
-    }
-
-    /**
-     * Инициализирует орбиту для нового менеджера.
-     */
-    public synchronized void initManager(Manager manager) {
-        // Рассчитываем допустимые границы для центра орбиты
-        double minX = orbitRadius;
-        double maxX = Math.max(minX + 1, worldWidth - orbitRadius);
-        double minY = orbitRadius;
-        double maxY = Math.max(minY + 1, worldHeight - orbitRadius);
-
-        // Центр орбиты — случайная точка, чтобы орбита помещалась в мир
-        double centerX = minX + Math.random() * (maxX - minX);
-        double centerY = minY + Math.random() * (maxY - minY);
-        orbitCenters.put(manager, new double[]{centerX, centerY});
-        employeeAngles.put(manager, Math.random() * 2 * Math.PI);
-
-        // Устанавливаем начальную позицию на орбите
-        manager.setX(centerX + orbitRadius);
-        manager.setY(centerY);
     }
 
     @Override

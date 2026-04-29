@@ -3,5 +3,6 @@
     "allow": [
       "Bash(/home/nsz/documents/nstu/2sem/timp/4lab/mvnw *)"
     ]
-  }
+  },
+  "$version": 3
 }

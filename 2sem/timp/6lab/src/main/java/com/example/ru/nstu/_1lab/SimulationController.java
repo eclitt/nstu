@@ -14,12 +14,12 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.application.Platform;
+import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import java.util.List;
-import java.util.LinkedList;
-import java.util.HashMap;
-import java.util.Comparator;
+import java.io.*;
+import java.util.*;
 
 public class SimulationController {
 
@@ -93,6 +93,20 @@ public class SimulationController {
     @FXML
     private ComboBox<String> managerPriorityComboBox;
 
+    // Элементы сетевого управления
+    @FXML
+    private TextField portField;
+    @FXML
+    private Button connectBtn;
+    @FXML
+    private ListView<String> clientListView;
+    @FXML
+    private Button swapBtn;
+    @FXML
+    private ComboBox<String> giveTypeCombo;
+    @FXML
+    private ComboBox<String> getTypeCombo;
+
     // Элементы меню
     @FXML
     private CheckMenuItem menuTimeOn;
@@ -115,6 +129,11 @@ public class SimulationController {
     private int totalDevelopers = 0;
     private int totalManagers = 0;
     private long finalTime = 0;
+
+    private ConsoleWindow consoleWindow;
+
+    private SimulationClient networkClient;
+    private final String clientId = "Client_" + UUID.randomUUID().toString().substring(0, 4);
 
     // Значения вероятностей
     private final List<Double> probabilityValues = List.of(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0);
@@ -204,6 +223,15 @@ public class SimulationController {
                 updateStatistics();
             }
         };
+
+        // Загрузка конфигурации при запуске
+        loadConfig();
+
+        // Инициализация ComboBox для обмена
+        giveTypeCombo.getItems().addAll("Developer", "Manager");
+        giveTypeCombo.setValue("Developer");
+        getTypeCombo.getItems().addAll("Developer", "Manager");
+        getTypeCombo.setValue("Manager");
     }
 
     /**
@@ -380,9 +408,160 @@ public class SimulationController {
     }
 
     @FXML
-    private void exitApplication() {
-        Stage stage = (Stage) canvas.getScene().getWindow();
-        stage.close();
+    public void showConsole() {
+        try {
+            if (consoleWindow == null) {
+                consoleWindow = new ConsoleWindow(this);
+            }
+            consoleWindow.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public int fireAllManagers() {
+        if (habitat != null) {
+            int count = habitat.fireAllManagers();
+            updateStatistics();
+            return count;
+        }
+        return 0;
+    }
+
+    public void hireManagers(int n) {
+        if (habitat != null) {
+            habitat.hireManagers(n);
+            updateStatistics();
+        }
+    }
+
+    @FXML
+    public void saveSimulation() {
+        if (habitat == null) return;
+
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Сохранить симуляцию");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Simulation Files", "*.sim"));
+        File file = fileChooser.showSaveDialog(canvas.getScene().getWindow());
+
+        if (file != null) {
+            try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file))) {
+                List<Employee> employees = CollectionsStorage.getInstance().getEmployees();
+                oos.writeObject(employees);
+                oos.writeLong(habitat.getElapsedTime());
+                showAlert("Успех", "Симуляция сохранена в " + file.getName());
+            } catch (IOException e) {
+                showAlert("Ошибка", "Не удалось сохранить симуляцию: " + e.getMessage());
+            }
+        }
+    }
+
+    @FXML
+    @SuppressWarnings("unchecked")
+    public void loadSimulation() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Загрузить симуляцию");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Simulation Files", "*.sim"));
+        File file = fileChooser.showOpenDialog(canvas.getScene().getWindow());
+
+        if (file != null) {
+            try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+                // Останавливаем текущую симуляцию
+                if (habitat != null && habitat.isRunning()) {
+                    stopSimulation();
+                }
+
+                List<Employee> employees = (List<Employee>) ois.readObject();
+                long savedElapsedTime = ois.readLong();
+
+                // Сброс и инициализация среды
+                Habitat.resetInstance();
+                startSimulation();
+                
+                // Очищаем текущие объекты (созданные при старте) и добавляем загруженные
+                CollectionsStorage.getInstance().clear();
+                habitat.resetCounts();
+
+                for (Employee emp : employees) {
+                    // Корректировка времени рождения: 
+                    // прожитое_время = savedElapsedTime - старое_birthTime
+                    // новое_birthTime = текущее_время_симуляции - прожитое_время
+                    // Поскольку мы только что начали симуляцию, текущее время = 0
+                    emp.setBirthTime(emp.getBirthTime() - savedElapsedTime);
+                    habitat.addLoadedEmployee(emp);
+                }
+
+                startbtn.setDisable(true);
+                stopbtn.setDisable(false);
+                updateStatistics();
+                showAlert("Успех", "Симуляция загружена из " + file.getName());
+            } catch (IOException | ClassNotFoundException e) {
+                showAlert("Ошибка", "Не удалось загрузить симуляцию: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void saveConfig() {
+        File configFile = new File("config.txt");
+        try (PrintWriter writer = new PrintWriter(new FileWriter(configFile))) {
+            writer.println("n1=" + n1FieldRight.getText());
+            writer.println("n2=" + n2FieldRight.getText());
+            writer.println("p1=" + probabilityComboBoxRight.getValue());
+            writer.println("devLifetime=" + developerLifetimeField.getText());
+            writer.println("mgrLifetime=" + managerLifetimeField.getText());
+            writer.println("showTime=" + (timeon.isSelected() ? "true" : "false"));
+            writer.println("showInfo=" + showInfoCheckBox.isSelected());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void loadConfig() {
+        File configFile = new File("config.txt");
+        if (!configFile.exists()) return;
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(configFile))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split("=");
+                if (parts.length != 2) continue;
+                String key = parts[0];
+                String value = parts[1];
+
+                switch (key) {
+                    case "n1": n1FieldRight.setText(value); break;
+                    case "n2": n2FieldRight.setText(value); break;
+                    case "p1": probabilityComboBoxRight.setValue(value); break;
+                    case "devLifetime": developerLifetimeField.setText(value); break;
+                    case "mgrLifetime": managerLifetimeField.setText(value); break;
+                    case "showTime": 
+                        if (value.equals("true")) timeon.setSelected(true);
+                        else timeoff.setSelected(true);
+                        break;
+                    case "showInfo": showInfoCheckBox.setSelected(Boolean.parseBoolean(value)); break;
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
+    public void exitApplication() {
+        saveConfig();
+        if (consoleWindow != null) {
+            consoleWindow.close();
+        }
+        Platform.exit();
+    }
+
+    private void showAlert(String title, String content) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
     }
 
     @FXML
@@ -427,6 +606,177 @@ public class SimulationController {
         showInfoDialog();
         canvas.requestFocus();
     }
+
+    // --- Сетевые методы ---
+
+    @FXML
+    private void connectToServer() {
+        if (networkClient != null && networkClient.isConnected()) {
+            networkClient.disconnect();
+            connectBtn.setText("Подключиться");
+            swapBtn.setDisable(true);
+            return;
+        }
+
+        try {
+            int port = Integer.parseInt(portField.getText());
+            networkClient = new SimulationClient("localhost", port, clientId);
+            networkClient.setOnClientListUpdated(clients -> {
+                clientListView.getItems().clear();
+                for (String client : clients) {
+                    if (!client.equals(clientId)) {
+                        clientListView.getItems().add(client);
+                    }
+                }
+                swapBtn.setDisable(clientListView.getItems().isEmpty());
+            });
+
+            networkClient.setOnSwapRequestReceived(this::handleSwapRequest);
+            networkClient.connect();
+            connectBtn.setText("Отключиться");
+        } catch (Exception e) {
+            showAlert("Ошибка подключения", "Не удалось подключиться к серверу: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    private void sendSwapRequest() {
+        String targetClient = clientListView.getSelectionModel().getSelectedItem();
+        if (targetClient == null) {
+            showAlert("Ошибка", "Выберите клиента для обмена");
+            return;
+        }
+
+        if (habitat == null || !habitat.isRunning()) {
+            showAlert("Ошибка", "Симуляция должна быть запущена");
+            return;
+        }
+
+        String giveType = giveTypeCombo.getValue();
+        String getType = getTypeCombo.getValue();
+
+        List<Employee> myEmployeesToGive = new ArrayList<>();
+        for (Employee e : CollectionsStorage.getInstance().getEmployees()) {
+            boolean matches = ("Developer".equals(giveType) && e instanceof Developer) ||
+                              ("Manager".equals(giveType) && e instanceof Manager);
+            if (matches) {
+                myEmployeesToGive.add(e);
+            }
+        }
+
+        if (myEmployeesToGive.isEmpty()) {
+            showAlert("Ошибка", "Нет объектов типа " + giveType + " для обмена");
+            return;
+        }
+
+        networkClient.sendSwapRequest(targetClient, myEmployeesToGive, giveType, getType);
+        showAlert("Запрос отправлен", "Ожидайте подтверждения от клиента " + targetClient);
+    }
+
+    private void handleSwapRequest(SimulationServer.SwapRequest request) {
+        if (habitat == null) return;
+
+        if (request.getStatus() == SimulationServer.SwapRequest.Status.PENDING) {
+            // Мы получили запрос на обмен
+            handleIncomingSwapRequest(request);
+        } else if (request.getStatus() == SimulationServer.SwapRequest.Status.ACCEPTED) {
+            // Наш запрос был принят
+            handleAcceptedSwapRequest(request);
+        } else if (request.getStatus() == SimulationServer.SwapRequest.Status.REJECTED) {
+            // Наш запрос был отклонен
+            showAlert("Обмен отклонен", "Клиент " + request.getTargetClientId() + " отказался от обмена.");
+        }
+    }
+
+    private void handleIncomingSwapRequest(SimulationServer.SwapRequest request) {
+        // Подсчитываем, сколько у нас объектов требуемого типа
+        String typeToGive = request.getGetType();
+        long myCountToGive = CollectionsStorage.getInstance().getEmployees().stream()
+                .filter(e -> ("Developer".equals(typeToGive) && e instanceof Developer) ||
+                            ("Manager".equals(typeToGive) && e instanceof Manager))
+                .count();
+
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Запрос на обмен");
+        confirm.setHeaderText("Клиент " + request.getSourceClientId() + " предлагает обмен");
+        confirm.setContentText("Вы получите: " + request.getEmployees().size() + " шт. " + request.getGiveType() + "\n" +
+                               "От вас требуется: " + myCountToGive + " шт. " + typeToGive);
+
+        Optional<ButtonType> result = confirm.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            // Собираем свои объекты для ответа
+            List<Employee> myEmployeesToGive = new ArrayList<>();
+            
+            for (Employee e : CollectionsStorage.getInstance().getEmployees()) {
+                boolean matches = ("Developer".equals(typeToGive) && e instanceof Developer) ||
+                                  ("Manager".equals(typeToGive) && e instanceof Manager);
+                if (matches) {
+                    myEmployeesToGive.add(e);
+                }
+            }
+
+            if (myEmployeesToGive.isEmpty()) {
+                showAlert("Ошибка", "У вас нет объектов типа " + typeToGive + " для обмена. Обмен отменен.");
+                request.setStatus(SimulationServer.SwapRequest.Status.REJECTED);
+                networkClient.sendSwapResponse(request);
+                return;
+            }
+
+            // Удаляем свои объекты
+            for (Employee e : myEmployeesToGive) {
+                CollectionsStorage.getInstance().removeEmployee(e);
+            }
+            habitat.updateCounts();
+
+            // Добавляем полученные объекты
+            for (Employee e : request.getEmployees()) {
+                habitat.addLoadedEmployee(e);
+            }
+
+            // Отправляем ответ с нашими объектами
+            SimulationServer.SwapRequest response = new SimulationServer.SwapRequest(
+                request.getSourceClientId(), request.getTargetClientId(), myEmployeesToGive, 
+                request.getGetType(), request.getGiveType()
+            );
+            response.setStatus(SimulationServer.SwapRequest.Status.ACCEPTED);
+            networkClient.sendSwapResponse(response);
+            
+            updateAndRender();
+            showAlert("Обмен завершен", "Вы успешно обменялись объектами с " + request.getSourceClientId());
+        } else {
+            // Отклоняем запрос
+            request.setStatus(SimulationServer.SwapRequest.Status.REJECTED);
+            networkClient.sendSwapResponse(request);
+        }
+    }
+
+    private void handleAcceptedSwapRequest(SimulationServer.SwapRequest request) {
+        // Наш запрос приняли, и нам прислали объекты в ответ
+        // Сначала удалим тех, кого мы предлагали (они все еще у нас, т.к. мы ждали подтверждения)
+        String myGiveType = request.getGiveType();
+        List<Employee> toRemove = new ArrayList<>();
+        for (Employee e : CollectionsStorage.getInstance().getEmployees()) {
+            boolean matches = ("Developer".equals(myGiveType) && e instanceof Developer) ||
+                              ("Manager".equals(myGiveType) && e instanceof Manager);
+            if (matches) {
+                toRemove.add(e);
+            }
+        }
+        
+        for (Employee e : toRemove) {
+            CollectionsStorage.getInstance().removeEmployee(e);
+        }
+
+        // Добавляем полученные объекты
+        for (Employee e : request.getEmployees()) {
+            habitat.addLoadedEmployee(e);
+        }
+        
+        habitat.updateCounts();
+        updateAndRender();
+        showAlert("Обмен завершен", "Клиент " + request.getTargetClientId() + " принял обмен.");
+    }
+
 
     /**
      * Показывает модальное окно с информацией о симуляции.
@@ -556,7 +906,6 @@ public class SimulationController {
         
         // Получаем коллекции из Habitat
         LinkedList<Employee> employees = habitat.getEmployeesLinkedList();
-        HashMap<Integer, Long> birthTimeMap = habitat.getBirthTimeMap();
         
         // Создаём модальное окно
         Stage dialogStage = new Stage();

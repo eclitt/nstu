@@ -1,14 +1,18 @@
 package com.example.ru.nstu._1lab;
 
 import javafx.scene.paint.Color;
+import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Абстрактный класс сотрудника компании.
  * Содержит базовые свойства для визуализации и позиционирования объекта.
  */
-public abstract class Employee implements IBehaviour {
+public abstract class Employee implements IBehaviour, Serializable {
     // Счётчик для последовательных ID (используется для проверки уникальности)
-    private static int counter = 0;
+    protected static int counter = 0;
+    public static Set<Integer> idSet = new HashSet<>();
     
     // Уникальный случайный идентификатор
     protected int id;
@@ -26,7 +30,8 @@ public abstract class Employee implements IBehaviour {
     protected double height = 40;
 
     // Цвет для визуализации
-    protected Color color;
+    protected transient Color color;
+    protected double red, green, blue, opacity;
 
     public Employee() {
         this.id = generateUniqueId();
@@ -34,9 +39,47 @@ public abstract class Employee implements IBehaviour {
         this.lifetime = 0;
     }
 
+    protected void setColor(Color color) {
+        this.color = color;
+        this.red = color.getRed();
+        this.green = color.getGreen();
+        this.blue = color.getBlue();
+        this.opacity = color.getOpacity();
+    }
+
+    public Color getColor() {
+        if (color == null) {
+            color = new Color(red, green, blue, opacity);
+        }
+        return color;
+    }
+
     @Override
     public boolean equals(Object obj) {
-        return super.equals(obj);
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Employee employee = (Employee) obj;
+        return id == employee.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Integer.hashCode(id);
+    }
+
+    /**
+     * Сбрасывает счетчик ID и множество идентификаторов.
+     */
+    public static synchronized void resetCounter() {
+        counter = 0;
+        idSet.clear();
+    }
+
+    /**
+     * Сбрасывает множество идентификаторов.
+     */
+    public static synchronized void clearIdSet() {
+        idSet.clear();
     }
 
     /**
@@ -111,23 +154,6 @@ public abstract class Employee implements IBehaviour {
     public double getHeight() {
         return height;
     }
-
-    public Color getColor() {
-        return color;
-    }
-
-    /**
-     * Сбрасывает счётчик ID и коллекцию использованных ID. Вызывается при перезапуске симуляции.
-     */
-    public static void resetCounter() {
-        counter = 0;
-        idSet.clear();
-    }
-    
-    /**
-     * TreeSet для хранения уникальных идентификаторов.
-     */
-    public static java.util.Set<Integer> idSet = new java.util.TreeSet<>();
 
     /**
      * Возвращает тип сотрудника в виде строки.

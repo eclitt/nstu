@@ -14,6 +14,13 @@ public class HelloApplication extends Application {
         Scene scene = new Scene(fxmlLoader.load(), 800, 600);
         stage.setTitle("Симуляция компании");
         stage.setScene(scene);
+
+        // Сохранение конфигурации при закрытии окна
+        stage.setOnCloseRequest(event -> {
+            SimulationController controller = fxmlLoader.getController();
+            controller.exitApplication();
+        });
+
         stage.show();
     }
 

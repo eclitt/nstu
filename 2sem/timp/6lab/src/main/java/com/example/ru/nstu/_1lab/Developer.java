@@ -11,7 +11,7 @@ public class Developer extends Employee {
 
     public Developer() {
         super();
-        this.color = Color.BLUE;
+        setColor(Color.BLUE);
         this.width = 40;
         this.height = 40;
     }

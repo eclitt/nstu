@@ -91,6 +91,7 @@ public class Habitat {
      */
     public static synchronized void resetInstance() {
         instance = null;
+        Employee.clearIdSet();
     }
 
     /**
@@ -201,8 +202,74 @@ public class Habitat {
         // Регистрация в AI (если AI запущен)
         if (managerAI != null) {
             synchronized (managerAI.employees) {
-                List<Manager> mgrList = (List<Manager>) managerAI.employees;
-                mgrList.add(manager);
+                List<Manager> managerList = (List<Manager>) managerAI.employees;
+                managerList.add(manager);
+            }
+        }
+    }
+
+    /**
+     * Удаляет всех менеджеров из симуляции.
+     * @return количество удаленных менеджеров
+     */
+    public synchronized int fireAllManagers() {
+        List<Employee> allEmployees = storage.getEmployees();
+        int removedCount = 0;
+        for (Employee employee : allEmployees) {
+            if (employee instanceof Manager) {
+                storage.removeEmployee(employee);
+                managerCount--;
+                removedCount++;
+                
+                // Удаление из AI
+                if (managerAI != null) {
+                    synchronized (managerAI.employees) {
+                        managerAI.employees.remove(employee);
+                    }
+                }
+            }
+        }
+        return removedCount;
+    }
+
+    /**
+     * Генерирует N новых менеджеров.
+     * @param n количество новых менеджеров
+     */
+    public synchronized void hireManagers(int n) {
+        for (int i = 0; i < n; i++) {
+            addManager(elapsedTime);
+        }
+    }
+
+    /**
+     * Сбрасывает счетчики объектов.
+     */
+    public synchronized void resetCounts() {
+        developerCount = 0;
+        managerCount = 0;
+    }
+
+    /**
+     * Добавляет загруженный объект в симуляцию.
+     * @param employee объект
+     */
+    @SuppressWarnings("unchecked")
+    public synchronized void addLoadedEmployee(Employee employee) {
+        storage.addEmployee(employee, employee.getBirthTime());
+        if (employee instanceof Developer) {
+            developerCount++;
+            if (developerAI != null) {
+                synchronized (developerAI.employees) {
+                    ((List<Developer>) developerAI.employees).add((Developer) employee);
+                }
+            }
+        } else if (employee instanceof Manager) {
+            managerCount++;
+            if (managerAI != null) {
+                synchronized (managerAI.employees) {
+                    ((List<Manager>) managerAI.employees).add((Manager) employee);
+                }
             }
         }
     }
@@ -239,10 +306,8 @@ public class Habitat {
 
         // Очистка через хранилище
         storage.clear();
-        // Очистка статического набора в классе Employee (как было в оригинале)
-        if (Employee.idSet != null) {
-            Employee.idSet.clear();
-        }
+        // Очистка статического набора в классе Employee
+        Employee.clearIdSet();
 
         // Инициализация и запуск AI потоков
         initAndStartAI();
@@ -251,7 +316,6 @@ public class Habitat {
     /**
      * Инициализирует и запускает AI потоки.
      */
-    @SuppressWarnings("unchecked")
     private void initAndStartAI() {
         // Создаём списки для AI (будут пополняться при спавне объектов)
         List<Developer> devList = Collections.synchronizedList(new ArrayList<>());

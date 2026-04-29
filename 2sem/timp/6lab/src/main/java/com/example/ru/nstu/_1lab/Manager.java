@@ -11,7 +11,7 @@ public class Manager extends Employee {
 
     public Manager() {
         super();
-        this.color = Color.RED;
+        setColor(Color.RED);
         this.width = 40;
         this.height = 40;
     }

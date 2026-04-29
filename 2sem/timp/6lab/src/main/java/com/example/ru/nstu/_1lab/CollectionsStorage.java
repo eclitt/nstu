@@ -73,6 +73,16 @@ public class CollectionsStorage {
     }
 
     /**
+     * Удаляет сотрудника из всех коллекций.
+     * @param employee сотрудник для удаления
+     */
+    public synchronized void removeEmployee(Employee employee) {
+        employees.remove(employee);
+        existingIds.remove(employee.getId());
+        birthTimeMap.remove(employee.getId());
+    }
+
+    /**
      * Очищает все коллекции.
      */
     public synchronized void clear() {

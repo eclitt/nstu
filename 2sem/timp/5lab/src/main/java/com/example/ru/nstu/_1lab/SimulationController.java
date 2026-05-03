@@ -193,6 +193,12 @@ public class SimulationController {
                     } else if (code == KeyCode.I) {
                         showInfoDialog();
                         event.consume();
+                    } else if (code == KeyCode.S) {
+                        saveSimulation();
+                        event.consume();
+                    } else if (code == KeyCode.L) {
+                        loadSimulation();
+                        event.consume();
                     }
                 });
             }

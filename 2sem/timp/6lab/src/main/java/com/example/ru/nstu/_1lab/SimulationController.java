@@ -97,6 +97,8 @@ public class SimulationController {
     @FXML
     private TextField portField;
     @FXML
+    private TextField ipField;
+    @FXML
     private Button connectBtn;
     @FXML
     private ListView<String> clientListView;
@@ -556,7 +558,7 @@ public class SimulationController {
         Platform.exit();
     }
 
-    private void showAlert(String title, String content) {
+    public static void showAlert(String title, String content) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(title);
         alert.setHeaderText(null);
@@ -620,7 +622,14 @@ public class SimulationController {
 
         try {
             int port = Integer.parseInt(portField.getText());
-            networkClient = new SimulationClient("localhost", port, clientId);
+            String serverHost = ipField.getText();
+
+            System.out.println("=== ОТЛАДКА ===");
+            System.out.println("IP из поля: '" + serverHost + "'");
+            System.out.println("Порт из поля: " + port);
+            System.out.println("Длина строки IP: " + serverHost.length());
+
+            networkClient = new SimulationClient(serverHost, port, clientId);
             networkClient.setOnClientListUpdated(clients -> {
                 clientListView.getItems().clear();
                 for (String client : clients) {
@@ -638,6 +647,8 @@ public class SimulationController {
             showAlert("Ошибка подключения", "Не удалось подключиться к серверу: " + e.getMessage());
         }
     }
+
+
 
     @FXML
     private void sendSwapRequest() {

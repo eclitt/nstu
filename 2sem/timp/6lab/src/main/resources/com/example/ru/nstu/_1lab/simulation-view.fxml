@@ -155,6 +155,10 @@
                             <Label text="Порт:"/>
                             <TextField fx:id="portField" prefWidth="60" text="8080"/>
                         </HBox>
+                        <HBox spacing="5" alignment="CENTER_LEFT">
+                            <Label text="Сервер:"/>
+                            <TextField fx:id="ipField" prefWidth="120" text="127.0.0.1"/>
+                        </HBox>
                         <Button fx:id="connectBtn" text="Подключиться" onAction="#connectToServer" prefWidth="150"/>
                         <Label text="Подключенные клиенты:"/>
                         <ListView fx:id="clientListView" prefHeight="100"/>

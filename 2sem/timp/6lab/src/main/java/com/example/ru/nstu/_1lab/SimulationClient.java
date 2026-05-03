@@ -28,7 +28,8 @@ public class SimulationClient {
     }
 
     public void connect() throws IOException {
-        socket = new Socket(serverHost, serverPort);
+        socket = new Socket();
+        socket.connect(new InetSocketAddress(serverHost, serverPort), 5000);
         out = new ObjectOutputStream(socket.getOutputStream());
         in = new ObjectInputStream(socket.getInputStream());
         connected = true;
@@ -59,13 +60,17 @@ public class SimulationClient {
                 }
             }
         } catch (IOException | ClassNotFoundException e) {
-            System.err.println("Связь с сервером потеряна: " + e.getMessage());
+            Platform.runLater(() -> SimulationController.showAlert("Ошибка", "Потерянно соединение с сервером" + e.toString()));
+            System.err.println("Связь с сервером потеряна: " + e.toString());
             connected = false;
         }
     }
 
     public void sendSwapRequest(String targetId, List<Employee> employees, String giveType, String getType) {
-        if (!connected) return;
+        if (!connected) {
+            Platform.runLater(() -> SimulationController.showAlert("Ошибка", "Нет соединение с сервером"));
+            return;
+        }
         SimulationServer.SwapRequest request = new SimulationServer.SwapRequest(myId, targetId, employees, giveType, getType);
         sendMessage(request);
     }

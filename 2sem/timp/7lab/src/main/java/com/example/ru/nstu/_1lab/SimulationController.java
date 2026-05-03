@@ -563,6 +563,7 @@ public class SimulationController {
             writer.println("mgrLifetime=" + managerLifetimeField.getText());
             writer.println("showTime=" + (timeon.isSelected() ? "true" : "false"));
             writer.println("showInfo=" + showInfoCheckBox.isSelected());
+            writer.println("URL_db=" + DatabaseManager.getDbUrl());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -591,6 +592,7 @@ public class SimulationController {
                         else timeoff.setSelected(true);
                         break;
                     case "showInfo": showInfoCheckBox.setSelected(Boolean.parseBoolean(value)); break;
+                    case "URL_db": DatabaseManager.setURL(value);
                 }
             }
         } catch (IOException e) {

@@ -9,7 +9,7 @@ import java.util.List;
  * Обеспечивает сохранение и загрузку объектов сотрудников.
  */
 public class DatabaseManager {
-    private static final String DB_URL = "jdbc:sqlite:simulation.db";
+    protected static String DB_URL = "jdbc:sqlite:simulation.db";
 
     static {
         try {
@@ -88,6 +88,12 @@ public class DatabaseManager {
      * @param type тип сотрудников ("Developer" или "Manager")
      * @return список загруженных сотрудников
      */
+    public static void setURL(String _DB_URL) {
+            DB_URL = _DB_URL;
+    }
+    public static String getDbUrl() {
+        return DB_URL;
+    }
     public static List<Employee> loadEmployees(String type) {
         List<Employee> result = new ArrayList<>();
         String sql = "SELECT * FROM employees WHERE type = ?";

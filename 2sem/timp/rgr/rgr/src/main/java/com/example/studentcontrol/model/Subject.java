@@ -6,9 +6,13 @@ public class Subject {
     private int semester;
 
     public Subject() {}
+
     public Subject(int id, String name, int semester) {
-        this.id = id; this.name = name; this.semester = semester;
+        this.id = id;
+        this.name = name;
+        this.semester = semester;
     }
+
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
     public String getName() { return name; }
@@ -20,5 +24,4 @@ public class Subject {
     public String toString() {
         return name + " (сем. " + semester + ")";
     }
-
 }

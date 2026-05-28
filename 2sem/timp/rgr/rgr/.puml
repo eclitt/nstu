@@ -1,0 +1,60 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam monochrome true
+
+package "com.example.studentcontrol" {
+    
+    class MainApp {
+        + start(stage: Stage) : void
+        + main(args: String[]) : void
+    }
+
+    class StudentController {
+        - students : ObservableList<Student>
+        - nameField : TextField
+        - ageField : TextField
+        - tableView : TableView<Student>
+        
+        + initialize() : void
+        + handleAddStudent() : void
+        + handleDeleteStudent() : void
+        + loadStudentsFromDB() : void
+    }
+
+    class Student {
+        - id : int
+        - name : String
+        - age : int
+        - group : String
+        
+        + Student()
+        + Student(name: String, age: int, group: String)
+        
+        + getId() : int
+        + getName() : String
+        + setName(name: String) : void
+        + getAge() : int
+        + setAge(age: int) : void
+        + getGroup() : String
+        + setGroup(group: String) : void
+    }
+
+    class DatabaseHelper {
+        - connection : Connection
+        - DB_URL : String
+        
+        + connect() : void
+        + createTables() : void
+        + insertStudent(s: Student) : void
+        + getAllStudents() : List<Student>
+        + deleteStudent(id: int) : void
+    }
+}
+
+' Связи
+MainApp ..> StudentController : создает >
+StudentController o-- Student : управляет >
+StudentController ..> DatabaseHelper : использует >
+DatabaseHelper ..> Student : возвращает список >
+
+@enduml

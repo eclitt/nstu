@@ -67,7 +67,7 @@ typedef struct __attribute__((packed)) {
   uint8_t used; /* 0/1 */
   uint8_t type; /* inode_type_t */
   uint16_t reserved0;
-  uint32_t parent; /* inode index */
+  uint32_t parentq; /* inode index */
   uint32_t size;   /* bytes for file; for dir = 0 */
   uint32_t first_cluster; /* 0 means none */
   char name[VFS_NAME_MAX]; /* null-terminated if shorter */

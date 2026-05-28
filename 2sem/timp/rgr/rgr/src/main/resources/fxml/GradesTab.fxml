@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="10" xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.example.studentcontrol.ui.GradesTabController">
+    <padding>
+        <Insets top="10" right="10" bottom="10" left="10"/>
+    </padding>
+
+    <!-- Панель выбора студента и предмета -->
+    <GridPane hgap="10" vgap="10">
+        <padding>
+            <Insets bottom="10"/>
+        </padding>
+
+        <Label text="Студент:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+        <ComboBox fx:id="studentCombo" GridPane.rowIndex="0" GridPane.columnIndex="1" prefWidth="250"/>
+
+        <Label text="Предмет:" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+        <ComboBox fx:id="subjectCombo" GridPane.rowIndex="0" GridPane.columnIndex="3" prefWidth="250"/>
+
+        <Label text="Оценка:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+        <Spinner fx:id="gradeSpinner" GridPane.rowIndex="1" GridPane.columnIndex="1" prefWidth="80"/>
+
+        <Button text="Добавить оценку" onAction="#handleAdd" GridPane.rowIndex="1" GridPane.columnIndex="3"/>
+    </GridPane>
+
+    <!-- Таблица с оценками -->
+    <TableView fx:id="gradesTable" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn text="ID" prefWidth="50" fx:id="colId"/>
+            <TableColumn text="Предмет" prefWidth="300" fx:id="colSubject"/>
+            <TableColumn text="Оценка" prefWidth="80" fx:id="colGrade"/>
+            <TableColumn text="Дата" prefWidth="120" fx:id="colDate"/>
+        </columns>
+        <placeholder>
+            <Label text="Нет оценок у выбранного студента"/>
+        </placeholder>
+    </TableView>
+</VBox>

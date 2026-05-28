@@ -5,3 +5,4 @@ devLifetime=300
 mgrLifetime=250
 showTime=true
 showInfo=true
+URL_db=jdbc:sqlite:simulation.db

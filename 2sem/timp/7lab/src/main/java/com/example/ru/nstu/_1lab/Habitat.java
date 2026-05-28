@@ -299,7 +299,8 @@ public class Habitat {
     }
 
     private boolean canAddManager() {
-        if (developerCount == 0) {
+
+        if (developerCount == 0 || kPercent == 0) {
             return false;
         }
         double currentPercent = (managerCount * 100.0) / developerCount;

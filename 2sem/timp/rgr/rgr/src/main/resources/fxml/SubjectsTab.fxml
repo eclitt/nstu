@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="10" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.example.studentcontrol.ui.SubjectsTabController">
+    <padding>
+        <Insets top="10" right="10" bottom="10" left="10"/>
+    </padding>
+
+    <TableView fx:id="subjectsTable" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn text="ID" prefWidth="50" fx:id="colId"/>
+            <TableColumn text="Название" prefWidth="300" fx:id="colName"/>
+            <TableColumn text="Семестр" prefWidth="100" fx:id="colSemester"/>
+        </columns>
+    </TableView>
+
+    <GridPane hgap="10" vgap="10">
+        <padding>
+            <Insets top="10"/>
+        </padding>
+
+        <Label text="Название:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+        <TextField fx:id="nameField" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+        <Label text="Семестр:" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+        <Spinner fx:id="semesterSpinner" editable="true" GridPane.rowIndex="0" GridPane.columnIndex="3"/>
+
+        <HBox spacing="10" GridPane.rowIndex="1" GridPane.columnIndex="0" GridPane.columnSpan="4">
+            <Button text="Добавить" onAction="#handleAdd"/>
+            <Button text="Обновить" onAction="#handleUpdate"/>
+            <Button text="Удалить" onAction="#handleDelete"/>
+        </HBox>
+    </GridPane>
+</VBox>

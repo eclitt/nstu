@@ -1,0 +1,31 @@
+.root {
+    -fx-base: #f0f0f0;
+    -fx-background: #f5f5f5;
+    -fx-control-inner-background: white;
+    -fx-text-fill: #333333;
+}
+
+.tab-pane {
+    -fx-background-color: #f5f5f5;
+}
+
+.tab {
+    -fx-background-color: #e0e0e0;
+}
+
+.tab:selected {
+    -fx-background-color: #4a6ea9;
+}
+
+.table-view {
+    -fx-background-color: white;
+}
+
+.button {
+    -fx-background-color: #4a6ea9;
+    -fx-text-fill: white;
+}
+
+.label {
+    -fx-text-fill: #333333;
+}

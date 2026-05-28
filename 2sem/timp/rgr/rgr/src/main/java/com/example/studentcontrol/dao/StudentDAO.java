@@ -15,18 +15,19 @@ public class StudentDAO {
              ResultSet rs = st.executeQuery(sql)) {
             while (rs.next()) {
                 Student s = new Student(
-                    rs.getInt("id"),
-                    rs.getString("first_name"),
-                    rs.getString("last_name"),
-                    rs.getString("group_name"),
-                    rs.getDate("enrollment_date").toLocalDate());
+                        rs.getInt("id"),
+                        rs.getString("first_name"),
+                        rs.getString("last_name"),
+                        rs.getString("group_name"),
+                        rs.getDate("enrollment_date").toLocalDate());
                 list.add(s);
             }
         }
         return list;
     }
+
     public void insert(Student s) throws SQLException {
-        String sql = "INSERT INTO students(first_name,last_name,group_name,enrollment_date) VALUES(?,?,?,?)";
+        String sql = "INSERT INTO students(first_name, last_name, group_name, enrollment_date) VALUES(?,?,?,?)";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, s.getFirstName());
@@ -36,6 +37,7 @@ public class StudentDAO {
             ps.executeUpdate();
         }
     }
+
     public void update(Student s) throws SQLException {
         String sql = "UPDATE students SET first_name=?, last_name=?, group_name=?, enrollment_date=? WHERE id=?";
         try (Connection conn = DBConnection.getConnection();
@@ -48,6 +50,7 @@ public class StudentDAO {
             ps.executeUpdate();
         }
     }
+
     public void delete(int id) throws SQLException {
         String sql = "DELETE FROM students WHERE id = ?";
         try (Connection conn = DBConnection.getConnection();

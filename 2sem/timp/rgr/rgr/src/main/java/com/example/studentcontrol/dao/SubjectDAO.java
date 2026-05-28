@@ -14,15 +14,15 @@ public class SubjectDAO {
              ResultSet rs = st.executeQuery(sql)) {
             while (rs.next()) {
                 Subject s = new Subject(
-                    rs.getInt("id"),
-                    rs.getString("name"),
-                    rs.getInt("semester")
-                );
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getInt("semester"));
                 list.add(s);
             }
         }
         return list;
     }
+
     public void insert(Subject s) throws SQLException {
         String sql = "INSERT INTO subjects(name, semester) VALUES(?,?)";
         try (Connection conn = DBConnection.getConnection();
@@ -32,6 +32,7 @@ public class SubjectDAO {
             ps.executeUpdate();
         }
     }
+
     public void update(Subject s) throws SQLException {
         String sql = "UPDATE subjects SET name=?, semester=? WHERE id=?";
         try (Connection conn = DBConnection.getConnection();
@@ -42,6 +43,7 @@ public class SubjectDAO {
             ps.executeUpdate();
         }
     }
+
     public void delete(int id) throws SQLException {
         String sql = "DELETE FROM subjects WHERE id=?";
         try (Connection conn = DBConnection.getConnection();

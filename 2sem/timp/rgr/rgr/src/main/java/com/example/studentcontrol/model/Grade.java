@@ -10,9 +10,15 @@ public class Grade {
     private LocalDate dateAssigned;
 
     public Grade() {}
+
     public Grade(int id, Student student, Subject subject, int grade, LocalDate dateAssigned) {
-        this.id = id; this.student = student; this.subject = subject; this.grade = grade; this.dateAssigned = dateAssigned;
+        this.id = id;
+        this.student = student;
+        this.subject = subject;
+        this.grade = grade;
+        this.dateAssigned = dateAssigned;
     }
+
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
     public Student getStudent() { return student; }

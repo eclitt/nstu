@@ -117,6 +117,17 @@ public class SimulationController {
     @FXML
     private CheckMenuItem menuShowInfo;
 
+    @FXML
+    private Button loadDevsDB;
+
+    @FXML
+    private Button saveDevsDB;
+
+    @FXML
+    private Button loadManDB;
+
+    @FXML
+    private Button saveManDB;
 
     private Habitat habitat;
     private AnimationTimer timer;
@@ -136,8 +147,8 @@ public class SimulationController {
     private final String clientId = "Client_" + UUID.randomUUID().toString().substring(0, 4);
 
     // Значения вероятностей
-    private final List<Double> probabilityValues = List.of(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0);
-    private final List<String> probabilityStrings = List.of("10%", "20%", "30%", "40%", "50%", "60%", "70%", "80%", "90%", "100%");
+    private final List<Double> probabilityValues = List.of(0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0);
+    private final List<String> probabilityStrings = List.of("0%","10%", "20%", "30%", "40%", "50%", "60%", "70%", "80%", "90%", "100%");
 
     // Значения приоритетов потоков (1-10)
     private final List<String> priorityStrings = List.of("1", "2", "3", "4", "5", "6", "7", "8", "9", "10");
@@ -241,24 +252,11 @@ public class SimulationController {
         // Заполнение ComboBoxRight
         probabilityComboBoxRight.getItems().addAll(probabilityStrings);
         probabilityComboBoxRight.setValue("70%");
-        probabilityComboBoxRight.setOnAction(e -> {
-            int index = probabilityComboBoxRight.getSelectionModel().getSelectedIndex();
-            if (index >= 0 && index < probabilityListView.getItems().size()) {
-                probabilityListView.getSelectionModel().select(index);
-            }
-        });
+
 
         // Заполнение ListView
         probabilityListView.getItems().addAll(probabilityStrings);
         probabilityListView.getSelectionModel().select(6); // 70% по умолчанию
-        probabilityListView.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal != null) {
-                int index = probabilityStrings.indexOf(newVal);
-                if (index >= 0) {
-                    probabilityComboBoxRight.setValue(newVal);
-                }
-            }
-        });
     }
 
     /**
@@ -302,10 +300,11 @@ public class SimulationController {
         int n1 = parsePeriod(n1FieldRight, "Период рождения разработчиков");
         int n2 = parsePeriod(n2FieldRight, "Период рождения менеджеров");
         double p1 = getProbabilityFromControls();
+        int k = getK();
         long developerLifetime = parseLifetime(developerLifetimeField, "Время жизни разработчиков");
         long managerLifetime = parseLifetime(managerLifetimeField, "Время жизни менеджеров");
 
-        return new SimulationSettings(n1, n2, p1, 50, developerLifetime, managerLifetime);
+        return new SimulationSettings(n1, n2, p1, k, developerLifetime, managerLifetime);
     }
     
     /**
@@ -361,16 +360,43 @@ public class SimulationController {
      */
     private double getProbabilityFromControls() {
         String selected = probabilityComboBoxRight.getValue();
-        if (selected == null && !probabilityListView.getSelectionModel().getSelectedItems().isEmpty()) {
-            selected = probabilityListView.getSelectionModel().getSelectedItem();
+
+        // Проверка на пустой выбор
+        if (selected == null || selected.trim().isEmpty()) {
+            return 0.0; // Дефолтное значение
         }
-        if (selected != null) {
-            int index = probabilityStrings.indexOf(selected);
-            if (index >= 0) {
-                return probabilityValues.get(index);
-            }
+
+        try {
+            // Удаляем знак %, заменяем запятую на точку (на случай "99,5%")
+            String clean = selected.replace("%", "").replace(",", ".").trim();
+
+            // Переводим в double и делим на 100, чтобы получить вероятность (100% -> 1.0)
+            return Double.parseDouble(clean) / 100.0;
+
+        } catch (NumberFormatException e) {
+            System.err.println("Ошибка конвертации вероятности: " + selected);
+            return 0.0;
         }
-        return DEFAULT_P1;
+    }
+
+    private int getK() {
+        String selected = probabilityListView.getSelectionModel().getSelectedItem();
+
+        // Проверка, выбран ли элемент в списке
+        if (selected == null || selected.trim().isEmpty()) {
+            return 0; // Дефолтное значение, если клика не было
+        }
+
+        try {
+            // Удаляем знак %, если в списке ListView значения тоже с процентами
+            String clean = selected.replace("%", "").trim();
+
+            return Integer.parseInt(clean); // Возвращает чистое число (например, 100)
+
+        } catch (NumberFormatException e) {
+            System.err.println("Ошибка конвертации K: " + selected);
+            return 0;
+        }
     }
 
     /**

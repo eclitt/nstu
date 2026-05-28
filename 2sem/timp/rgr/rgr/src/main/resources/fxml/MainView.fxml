@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.example.studentcontrol.ui.MainController">
+    <MenuBar>
+        <Menu text="Вид">
+            <MenuItem text="Тёмная тема" onAction="#setDarkTheme"/>
+            <MenuItem text="Светлая тема" onAction="#setLightTheme"/>
+        </Menu>
+        <Menu text="Помощь">
+            <MenuItem text="О программе" onAction="#showAbout"/>
+        </Menu>
+    </MenuBar>
+
+    <TabPane fx:id="tabPane" VBox.vgrow="ALWAYS">
+        <Tab text="Студенты" closable="false">
+            <fx:include source="StudentsTab.fxml" />
+        </Tab>
+        <Tab text="Предметы" closable="false">
+            <fx:include source="SubjectsTab.fxml" />
+        </Tab>
+        <Tab text="Оценки" closable="false">
+            <fx:include source="GradesTab.fxml" />
+        </Tab>
+    </TabPane>
+</VBox>

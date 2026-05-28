@@ -10,6 +10,7 @@ public class Student {
     private LocalDate enrollmentDate;
 
     public Student() {}
+
     public Student(int id, String firstName, String lastName, String groupName, LocalDate enrollmentDate) {
         this.id = id;
         this.firstName = firstName;
@@ -17,7 +18,7 @@ public class Student {
         this.groupName = groupName;
         this.enrollmentDate = enrollmentDate;
     }
-    // Getters and setters
+
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
     public String getFirstName() { return firstName; }
@@ -31,6 +32,6 @@ public class Student {
 
     @Override
     public String toString() {
-        return lastName + " " + firstName;
+        return lastName + " " + firstName + " (" + groupName + ")";
     }
 }

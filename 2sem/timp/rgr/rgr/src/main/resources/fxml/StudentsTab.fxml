@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="10" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.example.studentcontrol.ui.StudentsTabController">
+    <padding>
+        <Insets top="10" right="10" bottom="10" left="10"/>
+    </padding>
+
+    <TableView fx:id="studentsTable" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn text="ID" prefWidth="50" fx:id="colId"/>
+            <TableColumn text="Фамилия" prefWidth="150" fx:id="colLastName"/>
+            <TableColumn text="Имя" prefWidth="150" fx:id="colFirstName"/>
+            <TableColumn text="Группа" prefWidth="100" fx:id="colGroup"/>
+            <TableColumn text="Дата поступления" prefWidth="120" fx:id="colDate"/>
+        </columns>
+    </TableView>
+
+    <GridPane hgap="10" vgap="10">
+        <padding>
+            <Insets top="10"/>
+        </padding>
+
+        <Label text="Фамилия:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+        <TextField fx:id="lastNameField" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+        <Label text="Имя:" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+        <TextField fx:id="firstNameField" GridPane.rowIndex="0" GridPane.columnIndex="3"/>
+
+        <Label text="Группа:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+        <TextField fx:id="groupField" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+        <Label text="Дата (ГГГГ-ММ-ДД):" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
+        <TextField fx:id="dateField" promptText="2024-09-01" GridPane.rowIndex="1" GridPane.columnIndex="3"/>
+
+        <HBox spacing="10" GridPane.rowIndex="2" GridPane.columnIndex="0" GridPane.columnSpan="4">
+            <Button text="Добавить" onAction="#handleAdd"/>
+            <Button text="Обновить" onAction="#handleUpdate"/>
+            <Button text="Удалить" onAction="#handleDelete"/>
+        </HBox>
+    </GridPane>
+</VBox>

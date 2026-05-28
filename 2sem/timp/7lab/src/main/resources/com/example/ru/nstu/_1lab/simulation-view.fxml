@@ -96,6 +96,7 @@
                         <Label text="ComboBox (шаг 10%):"/>
                         <ComboBox fx:id="probabilityComboBoxRight" prefWidth="150"/>
 
+                        <Label text="Вероятность рождения Менеджера" style="-fx-font-weight: bold;"/>
                         <Label text="Список (шаг 10%):"/>
                         <ListView fx:id="probabilityListView" prefHeight="150"/>
                     </VBox>
@@ -179,7 +180,16 @@
                         <Button fx:id="swapBtn" text="Обменяться объектами" onAction="#sendSwapRequest" prefWidth="150" disable="true"/>
                     </VBox>
                 </TitledPane>
-                
+
+                <!-- База данных -->
+                <TitledPane text="Базза данных" expanded="true">
+                    <VBox spacing="10" style="-fx-padding: 10;">
+                        <Button fx:id="loadDevsDB" text="Load Devs" onAction="#loadDevelopersFromDB" prefWidth="150"/>
+                        <Button fx:id="saveDevsDB" text="Save Devs" onAction="#saveDevelopersToDB" prefWidth="150"/>
+                        <Button fx:id="loadManDB" text="Load Man" onAction="#loadManagersFromDB" prefWidth="150"/>
+                        <Button fx:id="saveManDB" text="Save Man" onAction="#saveManagersToDB" prefWidth="150"/>
+                    </VBox>
+                </TitledPane>
             </VBox>
         </ScrollPane>
     </SplitPane>

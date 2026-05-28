@@ -1,0 +1,165 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+title UML Class Diagram: Student Control System (JavaFX + SQLite)
+
+' --- ПАКЕТЫ ---
+package "Main Layer" {
+    class MainApp {
+        + main(args : String[])
+        + start(primaryStage : Stage)
+    }
+}
+
+package "UI Layer (JavaFX Controllers)" {
+    class LoginController {
+        - usernameField : TextField
+        - passwordField : PasswordField
+        + handleLogin()
+        + handleCancel()
+        + isAuthenticated() : boolean
+    }
+
+    class MainController {
+        - tabPane : TabPane
+        - scene : Scene
+        + setScene(scene : Scene)
+        + setDarkTheme()
+        + setLightTheme()
+        + showAbout()
+    }
+
+    class StudentsTabController {
+        - studentsTable : TableView<Student>
+        - lastNameField : TextField
+        - firstNameField : TextField
+        - groupField : TextField
+        - dateField : TextField
+        - studentDAO : StudentDAO
+        + initialize()
+        + handleAdd()
+        + handleUpdate()
+        + handleDelete()
+        - refreshTable()
+    }
+
+    class SubjectsTabController {
+        - subjectsTable : TableView<Subject>
+        - nameField : TextField
+        - semesterSpinner : Spinner<Integer>
+        - subjectDAO : SubjectDAO
+        + initialize()
+        + handleAdd()
+        + handleUpdate()
+        + handleDelete()
+        - refreshTable()
+    }
+
+    class GradesTabController {
+        - studentCombo : ComboBox<Student>
+        - subjectCombo : ComboBox<Subject>
+        - gradeSpinner : Spinner<Integer>
+        - gradesTable : TableView<Grade>
+        - studentDAO : StudentDAO
+        - subjectDAO : SubjectDAO
+        - gradeDAO : GradeDAO
+        + initialize()
+        + handleAdd()
+        - loadStudents()
+        - loadSubjects()
+        - loadGrades(studentId : int)
+    }
+}
+
+package "DAO Layer (Data Access)" {
+    class DBConnection {
+        - URL : String
+        + getConnection() : Connection
+        + initializeDatabase()
+        - readSchema() : String
+    }
+
+    class StudentDAO {
+        + findAll() : List<Student>
+        + insert(s : Student)
+        + update(s : Student)
+        + delete(id : int)
+    }
+
+    class SubjectDAO {
+        + findAll() : List<Subject>
+        + insert(s : Subject)
+        + update(s : Subject)
+        + delete(id : int)
+    }
+
+    class GradeDAO {
+        + findByStudent(studentId : int) : List<Grade>
+        + insert(studentId : int, subjectId : int, grade : int)
+        + delete(id : int)
+    }
+}
+
+package "Model Layer" {
+    class Student {
+        - id : int
+        - firstName : String
+        - lastName : String
+        - groupName : String
+        - enrollmentDate : LocalDate
+        + Student(id, firstName, lastName, groupName, enrollmentDate)
+        + getters/setters
+    }
+
+    class Subject {
+        - id : int
+        - name : String
+        - semester : int
+        + Subject(id, name, semester)
+        + getters/setters
+    }
+
+    class Grade {
+        - id : int
+        - student : Student
+        - subject : Subject
+        - grade : int
+        - dateAssigned : LocalDate
+        + Grade(id, student, subject, grade, dateAssigned)
+        + getters/setters
+    }
+}
+
+' --- СВЯЗИ ---
+
+' Main запускает приложение и показывает логин
+MainApp --> LoginController : shows & waits for auth
+MainApp --> MainController : creates main window
+
+' MainController управляет табами (вложенными контроллерами)
+MainController o-- StudentsTabController : contains
+MainController o-- SubjectsTabController : contains
+MainController o-- GradesTabController : contains
+
+' Контроллеры используют DAO
+StudentsTabController ..> StudentDAO : uses
+SubjectsTabController ..> SubjectDAO : uses
+GradesTabController ..> StudentDAO : uses
+GradesTabController ..> SubjectDAO : uses
+GradesTabController ..> GradeDAO : uses
+
+' DAO работают через DBConnection
+StudentDAO ..> DBConnection : uses connection
+SubjectDAO ..> DBConnection : uses connection
+GradeDAO ..> DBConnection : uses connection
+
+' DAO оперируют моделями
+StudentDAO ..> Student : creates/updates
+SubjectDAO ..> Subject : creates/updates
+GradeDAO ..> Grade : creates/maps
+
+' Модели связаны между собой
+Grade o-- Student : references
+Grade o-- Subject : references
+
+@enduml
